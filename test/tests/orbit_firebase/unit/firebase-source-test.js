@@ -143,6 +143,25 @@ test("#find - can find individual records by passing in a single id", function()
   });
 });
 
+test("#find - can find multiple records by passing in many ids", function() {
+  expect(2);
+  stop();
+  var jupiter = {id: 'planet1', name: 'Jupiter', classification: 'gas giant'};
+  var saturn = {id: 'planet2', name: 'Saturn', classification: 'something else'};
+
+  all([
+    source.add('planet', jupiter),
+    source.add('planet', saturn)
+  ]).then(function(){
+    source.find('planet', [jupiter.id, saturn.id]).then(function(foundPlanets){
+      start();
+
+      equal(foundPlanets[0].name, jupiter.name, 'found Jupiter');
+      equal(foundPlanets[1].name, saturn.name, 'found Saturn');
+    });
+  });
+});
+
 test("#find - can find all records", function() {
   expect(1);
   stop();
