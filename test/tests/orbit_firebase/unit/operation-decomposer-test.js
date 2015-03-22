@@ -406,3 +406,56 @@ test('remove from hasMany => hasMany', function(){
     ]
   );  
 });
+
+test('add record with links', function(){
+  transformCache(
+    op('add', ['moon', titan.id], titan)
+  );
+
+  var uranus = { id: '13', name: "Uranus", __rel: { moons: asHash(titan.id, true) } };
+
+  operationsShouldMatch(
+    operationDecomposer.decompose(
+      op('add', ['planet', uranus.id], uranus)
+    ),
+    [
+      op('add', ['planet', uranus.id], uranus),
+      op('replace', ['planet', uranus.id, '__rel', 'moons'], asHash(titan.id, true)),
+      op('add', ['moon', titan.id, '__rel', 'planet'], uranus.id)
+    ]
+  );
+});
+
+test('add record with no links', function(){
+  transformCache(
+    op('add', ['moon', titan.id], titan)
+  );
+
+  var uranus = { id: '13', name: "Uranus" };
+
+  operationsShouldMatch(
+    operationDecomposer.decompose(
+      op('add', ['planet', uranus.id], uranus)
+    ),
+    [
+      op('add', ['planet', uranus.id], uranus)
+    ]
+  );
+});
+
+test('remove record with no links', function(){
+  transformCache(
+    op('add', ['moon', titan.id], titan)
+  );
+
+  var uranus = { id: '13', name: "Uranus" };
+
+  operationsShouldMatch(
+    operationDecomposer.decompose(
+      op('remove', ['planet', uranus.id])
+    ),
+    [
+      op('remove', ['planet', uranus.id])
+    ]
+  );
+});
