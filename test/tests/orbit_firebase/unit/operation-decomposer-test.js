@@ -420,7 +420,6 @@ test('add record with links', function(){
     ),
     [
       op('add', ['planet', uranus.id], uranus),
-      op('replace', ['planet', uranus.id, '__rel', 'moons'], asHash(titan.id, true)),
       op('add', ['moon', titan.id, '__rel', 'planet'], uranus.id)
     ]
   );
