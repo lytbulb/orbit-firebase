@@ -86,5 +86,12 @@ test("allows add link operation when record exists in cache", function(){
   var planet = {id: "def34", name: "Jupiter"};
   cache.transform(op('add', ['planet', 'abc1'], planet));
   var operation = op('add', ['planet', 'abc1', '__rel', 'moons', 'def345'], true);
-  ok(firebaseConnector.filterFunction(operation), "operation was filtered out");
+  ok(firebaseConnector.filterFunction(operation), "operation was allowed through filter");
+});
+
+test("filters out add record operation if record already exists", function(){
+  var planet = {id: "def34", name: "Jupiter"};
+  var operation = op('add', ['planet', 'abc1'], planet);
+  cache.transform(operation);
+  ok(!firebaseConnector.filterFunction(operation), "operation was filtered out");
 });
