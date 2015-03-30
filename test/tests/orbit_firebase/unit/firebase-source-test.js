@@ -180,6 +180,29 @@ test("#find - can find all records", function() {
   });
 });
 
+test("#find - can 'include' relationships", function(){
+  stop();
+
+  var jupiter = { id: 'planet1', name: "Jupiter", moons: { 'moon1': true } };
+  var europa = { id: 'moon1', name: 'Europa', planet: 'planet1' };
+
+  all([
+    firebaseClient.set('planet/planet1', jupiter),
+    firebaseClient.set('moon/moon1', europa)
+
+  ])
+  .then(function(){
+    source.find('planet', 'planet1', {include: 'moons'})
+    .then(function(){
+      debugger
+      start();
+      var sourceEuropa = source.retrieve(['moon', 'moon1']);
+      equal(sourceEuropa.id, europa.id);
+    });
+
+  });
+});
+
 test("#find - returns empty when no results for find all", function() {
   expect(2);
   stop();
