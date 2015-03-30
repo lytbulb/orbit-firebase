@@ -151,12 +151,13 @@ test('subscribe to record including a hasMany', function(){
       start();
 
       includesAll(firebaseListener.subscriptions(), [
-        'moon/moon1:value',
-        'moon/moon1/name:value',
-        'planet/planet1:value',
-        'planet/planet1/name:value',
         'planet/planet1/classification:value',
-        'moon/moon1/planet:value'
+        'planet/planet1/moons:child_added',
+        'planet/planet1/moons:child_removed',
+        'planet/planet1/name:value',
+        'planet/planet1:value',
+        'moon/moon1:value',
+        'moon/moon1/name:value'
       ]);
       
     });
