@@ -7,6 +7,7 @@ import { uuid } from 'orbit/lib/uuid';
 import Orbit from 'orbit/main';
 import { captureDidTransform, captureDidTransforms, op } from 'tests/test-helper';
 import { fop } from 'orbit-firebase/lib/operation-utils';
+import { Promise, all } from 'rsvp';
 
 var schemaDefinition = {
   modelDefaults: {
@@ -54,6 +55,7 @@ var firebaseClient,
 module("OF - FirebaseListener - subscriptions", {
   setup: function() {
     Orbit.Promise = Promise;
+    Orbit.all = all;
 
     var firebaseRef = new Firebase("https://orbit-firebase.firebaseio.com/test");
     firebaseRef.set(null);
@@ -70,14 +72,93 @@ module("OF - FirebaseListener - subscriptions", {
   }
 });
 
-test("subscribe to record adds subscriptions for the record and it's attributes", function(){
-  var jupiter = { id: "planet1", name: "Jupiter" };
-  firebaseClient.set('planet/planet1', jupiter);
+function arrayToHash(array, value){
+  var hash = {};
 
-  firebaseListener.subscribeToRecord('planet', 'planet1');
-  deepEqual(firebaseListener.subscriptions(), [
-    'planet/planet1:value',
-    "planet/planet1/name:value",
-    "planet/planet1/classification:value"
-  ]);
+  array.forEach(function(item){
+    hash[item] = value;
+  });
+
+  return hash;
+}
+
+function includesAll(a, b){
+  deepEqual(arrayToHash(a, true), arrayToHash(b, true));
+}
+
+test('subscribe to record', function(){
+  stop();
+  var jupiter = { id: 'planet1', name: 'Jupiter' };
+
+  firebaseClient.set('planet/planet1', jupiter)
+  .then(function(){
+    
+    start();
+
+    firebaseListener.subscribeToRecord('planet', 'planet1');
+
+    deepEqual(firebaseListener.subscriptions(), [
+      'planet/planet1:value',
+      'planet/planet1/name:value',
+      'planet/planet1/classification:value'
+    ]);
+    
+  });
+});
+
+test('subscribe to record including a hasOne', function(){
+  stop();
+  var jupiter = { id: 'planet1', name: 'Jupiter', moons: { 'moon1': true } };
+  var europa = { id: 'moon1', name: 'Europa', planet: 'planet1' };
+
+  all([
+    firebaseClient.set('planet/planet1', jupiter),
+    firebaseClient.set('moon/moon1', europa)
+
+  ])
+  .then(function(){
+    firebaseListener.subscribeToRecord('moon', 'moon1', {include: ['planet']})
+    .then(function(){
+      start();
+      console.log("===> testing");
+
+      includesAll(firebaseListener.subscriptions(), [
+        'moon/moon1:value',
+        'moon/moon1/name:value',
+        'planet/planet1:value',
+        'planet/planet1/name:value',
+        'planet/planet1/classification:value',
+        'moon/moon1/planet:value'
+      ]);
+      
+    });
+  });
+});
+
+test('subscribe to record including a hasMany', function(){
+  stop();
+  var jupiter = { id: 'planet1', name: 'Jupiter', moons: { 'moon1': true } };
+  var europa = { id: 'moon1', name: 'Europa', planet: 'planet1' };
+
+  all([
+    firebaseClient.set('planet/planet1', jupiter),
+    firebaseClient.set('moon/moon1', europa)
+
+  ])
+  .then(function(){
+    firebaseListener.subscribeToRecord('planet', 'planet1', {include: ['moons']})
+    .then(function(){
+      start();
+
+      includesAll(firebaseListener.subscriptions(), [
+        'moon/moon1:value',
+        'moon/moon1/name:value',
+        'planet/planet1:value',
+        'planet/planet1/name:value',
+        'planet/planet1/classification:value',
+        'moon/moon1/planet:value'
+      ]);
+      
+    });
+  });
 });
