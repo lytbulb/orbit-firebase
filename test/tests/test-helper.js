@@ -2,6 +2,7 @@
 import Operation from 'orbit/operation';
 import { fop } from 'orbit-firebase/lib/operation-utils';
 import { on } from 'rsvp';
+import Orbit from 'orbit/main';
 
 on('error', function(reason){
   console.log(reason);
@@ -16,7 +17,7 @@ function op(opType, path, value){
 
 function nextEventPromise(emitter, event){
   return new Promise(function(resolve, fail){
-    emitter.one(event, 
+    emitter.one(event,
       function(operation){ resolve(operation); },
       function(error){ fail(error); }
     );
@@ -35,7 +36,7 @@ function captureDidTransforms(source, count, options){
     var operations = [];
 
     var timeout = setTimeout(function(){
-      reject("Failed to receive " + count + " operations", operations.length);
+      reject("Failed to receive " + count + " operations (received " + operations.length + ")");
     }, 1500);
 
     function callback(operation){
@@ -44,7 +45,7 @@ function captureDidTransforms(source, count, options){
       if(options.logOperations){
         console.log("operation " + operations.length + ": ", fop(operation));
       }
-      
+
       if(operations.length === count){
         source.off("didTransform", callback);
         clearTimeout(timeout);
@@ -56,5 +57,11 @@ function captureDidTransforms(source, count, options){
   });
 }
 
+function wait(time){
+  return new Orbit.Promise(function(resolve){
+    setTimeout(resolve, time);
+  });
+}
 
-export { nextEventPromise, op, captureDidTransform, captureDidTransforms };
+
+export { nextEventPromise, op, captureDidTransform, captureDidTransforms, wait };

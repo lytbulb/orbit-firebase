@@ -7,7 +7,7 @@ import FirebaseSource from 'orbit-firebase/firebase-source';
 import FirebaseClient from 'orbit-firebase/firebase-client';
 import { Promise, all, hash, denodeify,resolve, on, defer, map } from 'rsvp';
 import { isArray } from 'orbit/lib/objects';
-import { nextEventPromise, captureOperations } from 'tests/test-helper';
+import { nextEventPromise, captureDidTransforms, wait } from 'tests/test-helper';
 
 var schema,
     source,
@@ -98,7 +98,7 @@ test("#patch - can patch records", function() {
   .then(function(addedPlanet){
     planet = addedPlanet;
     return source.patch('planet', {id: addedPlanet.id}, 'classification', 'iceball');
-  })  
+  })
   .then(function(){
       firebaseRef.child('planet/' + planet.id + '/classification').once('value', function(snapshot){
       start();
@@ -180,6 +180,27 @@ test("#find - can find all records", function() {
   });
 });
 
+test("#find - can 'include' relationships", function(){
+  stop();
+
+  var jupiter = { id: 'planet1', name: "Jupiter", moons: { 'moon1': true } };
+  var europa = { id: 'moon1', name: 'Europa', planet: 'planet1' };
+
+  all([
+    source.add('planet', jupiter),
+    source.add('moon', europa)
+  ])
+  .then(function(){
+    return source.find('planet', 'planet1', {include: ['moons']});
+
+  })
+  .then(function(){
+    start();
+    var sourceEuropa = source.retrieve(['moon', 'moon1']);
+    equal(sourceEuropa.id, europa.id);
+  });
+});
+
 test("#find - returns empty when no results for find all", function() {
   expect(2);
   stop();
@@ -237,7 +258,7 @@ test('#addLink - can set hasOne link', function(){
     start();
     equal(fbTitan.planet, saturn.id, "titan is in orbit around saturn");
     equal(source.retrieveLink('moon', titan.id, "planet"), saturn.id, "cache should have added saturn to titan");
-  });  
+  });
 });
 
 test("#removeLink - can remove from a hasMany relationship", function() {
@@ -345,7 +366,7 @@ test("#findLink - can find has-many linked ids", function() {
   ])
   .then(function(){
     return source.addLink('planet', saturn.id, 'moons', titan.id);
-  }) 
+  })
   .then(function(){
     source.findLink('planet', saturn.id, 'moons').then(function(moonIds){
       start();
@@ -366,7 +387,7 @@ test("#findLinked - can find has-many linked records", function() {
   ])
   .then(function(){
     return source.addLink('planet', saturn.id, 'moons', titan.id);
-  }) 
+  })
   .then(function(){
     source.findLinked('planet', saturn.id, 'moons').then(function(moons){
       start();
@@ -387,7 +408,7 @@ test("#findLink - can find has-one linked id", function() {
   ])
   .then(function(){
     return source.addLink('moon', titan.id, 'planet', saturn.id);
-  }) 
+  })
   .then(function(){
     source.findLink('moon', titan.id, 'planet').then(function(planetId){
       start();
@@ -408,7 +429,7 @@ test("#findLinked - can find has-one linked record", function() {
   ])
   .then(function(){
     return source.addLink('moon', titan.id, 'planet', saturn.id);
-  }) 
+  })
   .then(function(){
     source.findLinked('moon', titan.id, 'planet').then(function(planet){
       start();
