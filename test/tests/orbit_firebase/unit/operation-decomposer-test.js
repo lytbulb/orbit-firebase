@@ -10,11 +10,6 @@ import { Promise, all, hash, denodeify,resolve, on, defer } from 'rsvp';
 import { isArray, isObject } from 'orbit/lib/objects';
 import { op } from 'tests/test-helper';
 
-on('error', function(reason){
-  console.log(reason);
-  console.error(reason.message, reason.stack);
-});
-
 var schema,
     cache,
     operationDecomposer,

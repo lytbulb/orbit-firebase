@@ -16,11 +16,6 @@ import FirebaseTransformer from 'orbit-firebase/firebase-transformer';
 import AddRecordTransformer from 'orbit-firebase/transformers/add-record';
 import { op } from 'tests/test-helper';
 
-on('error', function(reason){
-  console.log(reason);
-  console.error(reason.message, reason.stack);
-});
-
 var schemaDefinition = {
   modelDefaults: {
     keys: {
