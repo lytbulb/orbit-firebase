@@ -146,20 +146,56 @@ test('subscribe to record including a hasMany', function(){
 
   ])
   .then(function(){
-    firebaseListener.subscribeToRecord('planet', 'planet1', {include: ['moons']})
-    .then(function(){
-      start();
+    return firebaseListener.subscribeToRecord('planet', 'planet1', {include: ['moons']});
 
-      includesAll(firebaseListener.subscriptions(), [
-        'planet/planet1/classification:value',
-        'planet/planet1/moons:child_added',
-        'planet/planet1/moons:child_removed',
-        'planet/planet1/name:value',
-        'planet/planet1:value',
-        'moon/moon1:value',
-        'moon/moon1/name:value'
-      ]);
-      
-    });
+  })
+  .then(function(){
+    start();
+
+    includesAll(firebaseListener.subscriptions(), [
+      'planet/planet1/classification:value',
+      'planet/planet1/moons:child_added',
+      'planet/planet1/moons:child_removed',
+      'planet/planet1/name:value',
+      'planet/planet1:value',
+      'moon/moon1:value',
+      'moon/moon1/name:value'
+    ]);
+    
+  });
+});
+
+test("subscribe to a record when it's added to a hasMany", function(){
+  stop();
+  var jupiter = { id: 'planet1', name: 'Jupiter' };
+  var europa = { id: 'moon1', name: 'Europa' };
+
+  var capture = captureDidTransforms(firebaseListener, 5, {logOperations: true});
+
+  all([
+    firebaseClient.set('planet/planet1', jupiter),
+    firebaseClient.set('moon/moon1', europa)
+
+  ])
+  .then(function(){
+    return firebaseListener.subscribeToRecord('planet', 'planet1', {include: ['moons']});
+
+  })
+  .then(function(){
+    return firebaseClient.set('planet/planet1/moons/moon1', true);
+
+  });
+
+  capture.then(function(){
+    start();
+    includesAll(firebaseListener.subscriptions(), [
+      'moon/moon1/name:value',
+      'moon/moon1:value',
+      'planet/planet1/classification:value',
+      'planet/planet1/moons:child_added',
+      'planet/planet1/moons:child_removed',
+      'planet/planet1/name:value',
+      'planet/planet1:value'
+    ]);    
   });
 });
