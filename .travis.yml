@@ -11,3 +11,6 @@ install:
 
 script:
   - npm test
+
+notifications:
+  slack: lytbulb:tPkbeehYqq8eGO7eYsDap74P
