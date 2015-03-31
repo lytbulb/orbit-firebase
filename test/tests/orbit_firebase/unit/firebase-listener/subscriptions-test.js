@@ -199,3 +199,37 @@ test("subscribe to a record when it's added to a hasMany", function(){
     ]);    
   });
 });
+
+test("subscribe to a record when it's hasOne is replaced", function(){
+  stop();
+  var jupiter = { id: 'planet1', name: 'Jupiter' };
+  var europa = { id: 'moon1', name: 'Europa' };
+
+  var capture = captureDidTransforms(firebaseListener, 5, {logOperations: true});
+
+  all([
+    firebaseClient.set('planet/planet1', jupiter),
+    firebaseClient.set('moon/moon1', europa)
+
+  ])
+  .then(function(){
+    return firebaseListener.subscribeToRecord('moon', 'moon1', {include: ['planet']});
+
+  })
+  .then(function(){
+    return firebaseClient.set('moon/moon1/planet', 'planet1');
+
+  });
+
+  capture.then(function(){
+    start();
+    includesAll(firebaseListener.subscriptions(), [
+      "moon/moon1/name:value",
+      "moon/moon1/planet:value",
+      "moon/moon1:value",
+      "planet/planet1/classification:value",
+      "planet/planet1/name:value",
+      "planet/planet1:value"
+    ]);    
+  });
+});
