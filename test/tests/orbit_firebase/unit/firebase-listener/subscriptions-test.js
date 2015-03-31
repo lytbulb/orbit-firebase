@@ -233,3 +233,15 @@ test("subscribe to a record when it's hasOne is replaced", function(){
     ]);    
   });
 });
+
+test("subscribe to initial nested hasOne records", function(){
+});
+
+test("subscribe to added nested hasOne records", function(){
+});
+
+test("subscribe to initial nested hasMany records", function(){
+});
+
+test("subscribe to added nested hasMany records", function(){
+});
