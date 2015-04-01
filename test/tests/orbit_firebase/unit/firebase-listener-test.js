@@ -7,6 +7,7 @@ import { uuid } from 'orbit/lib/uuid';
 import Orbit from 'orbit/main';
 import { captureDidTransform, captureDidTransforms, op } from 'tests/test-helper';
 import { fop } from 'orbit-firebase/lib/operation-utils';
+import { Promise, all } from 'rsvp';
 
 var schemaDefinition = {
   modelDefaults: {
@@ -54,6 +55,7 @@ var firebaseClient,
 module("OF - FirebaseListener", {
   setup: function() {
     Orbit.Promise = Promise;
+    Orbit.all = all;
 
     var firebaseRef = new Firebase("https://orbit-firebase.firebaseio.com/test");
     firebaseRef.set(null);
@@ -93,8 +95,8 @@ test("receive remove record operation", function(){
 
   var planet = schema.normalize('planet', {id: "abc123", name: "Pluto"});
 
-  var receiveOperation = captureDidTransform(firebaseListener, 7);
-  
+  var receiveOperation = captureDidTransform(firebaseListener, 5);
+
   firebaseClient.set('planet/abc123', planet);
   firebaseClient.remove('planet/abc123');
 
@@ -111,7 +113,7 @@ test("receive update attribute operation", function(){
 
   var planet = schema.normalize('planet', {id: "abc123", name: "Pluto"});
 
-  var receiveOperation = captureDidTransform(firebaseListener, 6);
+  var receiveOperation = captureDidTransform(firebaseListener, 4);
   firebaseClient.set('planet/abc123', planet);
   firebaseClient.set('planet/abc123/name', "Jupiter");
 
@@ -125,11 +127,11 @@ test("receive update attribute operation", function(){
 
 test("receive replace hasOne operation", function(){
   stop();
-  firebaseListener.subscribeToType('moon');
+  firebaseListener.subscribeToType('moon', {include: ['planet']});
   var moon = schema.normalize('moon', {id: "moon123", name: "titan"});
   var planet = schema.normalize('planet', {id: "planet456", name: "jupiter"});
 
-  var receiveOperation = captureDidTransform(firebaseListener, 4);
+  var receiveOperation = captureDidTransform(firebaseListener, 7, {logOperations: true});
 
   firebaseClient.set('moon/moon123', moon);
   firebaseClient.set('planet/planet456', planet);
@@ -139,13 +141,13 @@ test("receive replace hasOne operation", function(){
     start();
     equal(receivedOperation.op, 'replace', "op matches");
     deepEqual(receivedOperation.path, ['moon', 'moon123', '__rel', 'planet'], "path matches");
-    equal(receivedOperation.value, "planet456", "link value matches");    
+    equal(receivedOperation.value, "planet456", "link value matches");
   });
 });
 
 test("receive remove hasOne operation", function(){
   stop();
-  firebaseListener.subscribeToType('moon');
+  firebaseListener.subscribeToType('moon', {include: ['planet']});
   var moon = schema.normalize('moon', {id: "moon123", name: "titan"});
   var planet = schema.normalize('planet', {id: "planet456", name: "jupiter"});
 
@@ -164,12 +166,12 @@ test("receive remove hasOne operation", function(){
 
 test("receive add to hasMany operation", function(){
   stop();
-  firebaseListener.subscribeToType('planet');
+  firebaseListener.subscribeToType('planet', {include: ['moons']});
 
   var moon = schema.normalize('moon', {id: "moon123", name: "titan"});
   var planet = schema.normalize('planet', {id: "planet456", name: "jupiter"});
 
-  var receiveOperation = captureDidTransform(firebaseListener, 6);
+  var receiveOperation = captureDidTransform(firebaseListener, 7, {logOperations: true});
 
   firebaseClient.set('moon/moon123', moon);
   firebaseClient.set('planet/planet456', planet);
@@ -185,17 +187,21 @@ test("receive add to hasMany operation", function(){
 
 test("receive remove from hasMany operation", function(){
   stop();
-  firebaseListener.subscribeToType('planet');
+  firebaseListener.subscribeToType('planet', {include: ['moons']});
 
   var moon = schema.normalize('moon', {id: "moon123", name: "titan"});
   var planet = schema.normalize('planet', {id: "planet456", name: "jupiter"});
 
-  var receiveOperation = captureDidTransform(firebaseListener, 8);
+  var receiveOperation = captureDidTransform(firebaseListener, 8, {logOperations: true});
 
-  firebaseClient.set('moon/moon123', moon);
-  firebaseClient.set('planet/planet456', planet);
-  firebaseClient.set('planet/planet456/moons/moon123', true);
-  firebaseClient.remove('planet/planet456/moons/moon123');
+  all([
+    firebaseClient.set('moon/moon123', moon),
+    firebaseClient.set('planet/planet456', planet),
+    firebaseClient.set('planet/planet456/moons/moon123', true)
+  ])
+  .then(function(){
+    return firebaseClient.remove('planet/planet456/moons/moon123');
+  });
 
   receiveOperation.then(function(receivedOperation){
     start();
