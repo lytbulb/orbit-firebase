@@ -92,7 +92,7 @@ test('subscribe to record', function(){
 
   firebaseClient.set('planet/planet1', jupiter)
   .then(function(){
-    
+
     start();
 
     firebaseListener.subscribeToRecord('planet', 'planet1');
@@ -102,7 +102,7 @@ test('subscribe to record', function(){
       'planet/planet1/name:value',
       'planet/planet1/classification:value'
     ]);
-    
+
   });
 });
 
@@ -130,7 +130,7 @@ test('subscribe to record including a hasOne', function(){
         'planet/planet1/classification:value',
         'moon/moon1/planet:value'
       ]);
-      
+
     });
   });
 });
@@ -161,7 +161,7 @@ test('subscribe to record including a hasMany', function(){
       'moon/moon1:value',
       'moon/moon1/name:value'
     ]);
-    
+
   });
 });
 
@@ -196,7 +196,7 @@ test("subscribe to a record when it's added to a hasMany", function(){
       'planet/planet1/moons:child_removed',
       'planet/planet1/name:value',
       'planet/planet1:value'
-    ]);    
+    ]);
   });
 });
 
@@ -230,7 +230,7 @@ test("subscribe to a record when it's hasOne is replaced", function(){
       "planet/planet1/classification:value",
       "planet/planet1/name:value",
       "planet/planet1:value"
-    ]);    
+    ]);
   });
 });
 
