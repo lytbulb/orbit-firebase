@@ -7,7 +7,7 @@ import { uuid } from 'orbit/lib/uuid';
 import Orbit from 'orbit/main';
 import { captureDidTransform, captureDidTransforms, op } from 'tests/test-helper';
 import { fop } from 'orbit-firebase/lib/operation-utils';
-import { Promise, all } from 'rsvp';
+import { Promise, all, resolve } from 'rsvp';
 
 var schemaDefinition = {
   modelDefaults: {
@@ -56,6 +56,7 @@ module("OF - FirebaseListener", {
   setup: function() {
     Orbit.Promise = Promise;
     Orbit.all = all;
+    Orbit.resolve = resolve;
 
     var firebaseRef = new Firebase("https://orbit-firebase.firebaseio.com/test");
     firebaseRef.set(null);
