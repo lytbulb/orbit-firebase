@@ -194,6 +194,7 @@ test("#find - can 'include' relationships", function(){
   .then(function(){
     source.find('planet', 'planet1', {include: ['moons']})
     .then(function(){
+      console.log("----> asserts");
       start();
       var sourceEuropa = source.retrieve(['moon', 'moon1']);
       equal(sourceEuropa.id, europa.id);
