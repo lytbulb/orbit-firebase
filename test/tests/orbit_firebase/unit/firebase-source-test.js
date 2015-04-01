@@ -7,7 +7,7 @@ import FirebaseSource from 'orbit-firebase/firebase-source';
 import FirebaseClient from 'orbit-firebase/firebase-client';
 import { Promise, all, hash, denodeify,resolve, on, defer, map } from 'rsvp';
 import { isArray } from 'orbit/lib/objects';
-import { nextEventPromise, captureOperations } from 'tests/test-helper';
+import { nextEventPromise, captureDidTransforms, wait } from 'tests/test-helper';
 
 var schema,
     source,
@@ -186,12 +186,13 @@ test("#find - can 'include' relationships", function(){
   var jupiter = { id: 'planet1', name: "Jupiter", moons: { 'moon1': true } };
   var europa = { id: 'moon1', name: 'Europa', planet: 'planet1' };
 
-  all([
-    firebaseClient.set('planet/planet1', jupiter),
-    firebaseClient.set('moon/moon1', europa)
 
-  ])
-  .then(function(){
+
+  firebaseClient.set('planet/planet1', jupiter);
+  firebaseClient.set('moon/moon1', europa);
+
+  wait(5000).then(function(){
+    console.log("----> adding subscriptions");
     source.find('planet', 'planet1', {include: ['moons']})
     .then(function(){
       console.log("----> asserts");

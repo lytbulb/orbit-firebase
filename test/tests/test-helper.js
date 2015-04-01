@@ -2,6 +2,7 @@
 import Operation from 'orbit/operation';
 import { fop } from 'orbit-firebase/lib/operation-utils';
 import { on } from 'rsvp';
+import Orbit from 'orbit/main';
 
 on('error', function(reason){
   console.log(reason);
@@ -56,5 +57,11 @@ function captureDidTransforms(source, count, options){
   });
 }
 
+function wait(time){
+  return new Orbit.Promise(function(resolve){
+    setTimeout(resolve, time);
+  });
+}
 
-export { nextEventPromise, op, captureDidTransform, captureDidTransforms };
+
+export { nextEventPromise, op, captureDidTransform, captureDidTransforms, wait };
