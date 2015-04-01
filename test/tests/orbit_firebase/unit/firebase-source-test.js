@@ -98,7 +98,7 @@ test("#patch - can patch records", function() {
   .then(function(addedPlanet){
     planet = addedPlanet;
     return source.patch('planet', {id: addedPlanet.id}, 'classification', 'iceball');
-  })  
+  })
   .then(function(){
       firebaseRef.child('planet/' + planet.id + '/classification').once('value', function(snapshot){
       start();
@@ -192,9 +192,8 @@ test("#find - can 'include' relationships", function(){
 
   ])
   .then(function(){
-    source.find('planet', 'planet1', {include: 'moons'})
+    source.find('planet', 'planet1', {include: ['moons']})
     .then(function(){
-      debugger
       start();
       var sourceEuropa = source.retrieve(['moon', 'moon1']);
       equal(sourceEuropa.id, europa.id);
@@ -260,7 +259,7 @@ test('#addLink - can set hasOne link', function(){
     start();
     equal(fbTitan.planet, saturn.id, "titan is in orbit around saturn");
     equal(source.retrieveLink('moon', titan.id, "planet"), saturn.id, "cache should have added saturn to titan");
-  });  
+  });
 });
 
 test("#removeLink - can remove from a hasMany relationship", function() {
@@ -368,7 +367,7 @@ test("#findLink - can find has-many linked ids", function() {
   ])
   .then(function(){
     return source.addLink('planet', saturn.id, 'moons', titan.id);
-  }) 
+  })
   .then(function(){
     source.findLink('planet', saturn.id, 'moons').then(function(moonIds){
       start();
@@ -389,7 +388,7 @@ test("#findLinked - can find has-many linked records", function() {
   ])
   .then(function(){
     return source.addLink('planet', saturn.id, 'moons', titan.id);
-  }) 
+  })
   .then(function(){
     source.findLinked('planet', saturn.id, 'moons').then(function(moons){
       start();
@@ -410,7 +409,7 @@ test("#findLink - can find has-one linked id", function() {
   ])
   .then(function(){
     return source.addLink('moon', titan.id, 'planet', saturn.id);
-  }) 
+  })
   .then(function(){
     source.findLink('moon', titan.id, 'planet').then(function(planetId){
       start();
@@ -431,7 +430,7 @@ test("#findLinked - can find has-one linked record", function() {
   ])
   .then(function(){
     return source.addLink('moon', titan.id, 'planet', saturn.id);
-  }) 
+  })
   .then(function(){
     source.findLinked('moon', titan.id, 'planet').then(function(planet){
       start();
