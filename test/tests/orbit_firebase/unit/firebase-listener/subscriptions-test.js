@@ -7,7 +7,7 @@ import { uuid } from 'orbit/lib/uuid';
 import Orbit from 'orbit/main';
 import { captureDidTransform, captureDidTransforms, op } from 'tests/test-helper';
 import { fop } from 'orbit-firebase/lib/operation-utils';
-import { Promise, all } from 'rsvp';
+import { Promise, all, resolve } from 'rsvp';
 import { buildOptions } from 'orbit-firebase/subscriptions/options';
 
 var schemaDefinition = {
@@ -66,6 +66,7 @@ module("OF - FirebaseListener - subscriptions", {
   setup: function() {
     Orbit.Promise = Promise;
     Orbit.all = all;
+    Orbit.resolve = resolve;
 
     var firebaseRef = new Firebase("https://orbit-firebase.firebaseio.com/test");
     firebaseRef.set(null);
@@ -127,7 +128,7 @@ test('subscribe to record including a hasOne', function(){
 
   ])
   .then(function(){
-    firebaseListener.subscribeToRecord('moon', 'moon1', {include: ['planet']})
+    firebaseListener.subscribeToRecord('moon', 'moon1', buildOptions({include: ['planet']}))
     .then(function(){
       start();
       console.log("===> testing");
@@ -156,7 +157,7 @@ test('subscribe to record including a hasMany', function(){
 
   ])
   .then(function(){
-    return firebaseListener.subscribeToRecord('planet', 'planet1', {include: ['moons']});
+    return firebaseListener.subscribeToRecord('planet', 'planet1', buildOptions({include: ['moons']}));
 
   })
   .then(function(){
@@ -188,7 +189,7 @@ test("subscribe to a record when it's added to a hasMany", function(){
 
   ])
   .then(function(){
-    return firebaseListener.subscribeToRecord('planet', 'planet1', {include: ['moons']});
+    return firebaseListener.subscribeToRecord('planet', 'planet1', buildOptions({include: ['moons']}));
 
   })
   .then(function(){
@@ -223,7 +224,7 @@ test("subscribe to a record when it's hasOne is replaced", function(){
 
   ])
   .then(function(){
-    return firebaseListener.subscribeToRecord('moon', 'moon1', {include: ['planet']});
+    return firebaseListener.subscribeToRecord('moon', 'moon1', buildOptions({include: ['planet']}));
 
   })
   .then(function(){
@@ -250,7 +251,7 @@ test("subscribe to initial nested hasOne records", function(){
   var jupiter = { id: 'planet1', name: 'Jupiter', star: 'star1', moons: {'moon1': true} };
   var europa = { id: 'moon1', name: 'Europa', planet: 'planet1' };
 
-  var capture = captureDidTransforms(firebaseListener, 5, {logOperations: true});
+  var capture = captureDidTransforms(firebaseListener, 9, {logOperations: true});
 
   all([
     firebaseClient.set('star/star1', sun),
@@ -264,22 +265,26 @@ test("subscribe to initial nested hasOne records", function(){
 
   capture.then(function(){
     start();
+    console.log("---> asserts");
     includesAll(firebaseListener.subscriptions(), [
       "moon/moon1/name:value",
       "moon/moon1/planet:value",
       "moon/moon1:value",
       "planet/planet1/classification:value",
       "planet/planet1/name:value",
-      "planet/planet1:value"
+      "planet/planet1/star:value",
+      "planet/planet1:value",
+      "star/star1/name:value",
+      "star/star1:value"
     ]);
   });
 });
 
-test("subscribe to added nested hasOne records", function(){
-});
+// test("subscribe to added nested hasOne records", function(){
+// });
 
-test("subscribe to initial nested hasMany records", function(){
-});
+// test("subscribe to initial nested hasMany records", function(){
+// });
 
-test("subscribe to added nested hasMany records", function(){
-});
+// test("subscribe to added nested hasMany records", function(){
+// });
