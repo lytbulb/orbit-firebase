@@ -128,7 +128,7 @@ test("receive update attribute operation", function(){
 
 test("receive replace hasOne operation", function(){
   stop();
-  firebaseListener.subscribeToType('moon', {include: ['planet']});
+  firebaseListener.subscribeToType('moon', null, {include: ['planet']});
   var moon = schema.normalize('moon', {id: "moon123", name: "titan"});
   var planet = schema.normalize('planet', {id: "planet456", name: "jupiter"});
 
@@ -148,7 +148,7 @@ test("receive replace hasOne operation", function(){
 
 test("receive remove hasOne operation", function(){
   stop();
-  firebaseListener.subscribeToType('moon', {include: ['planet']});
+  firebaseListener.subscribeToType('moon', null, {include: ['planet']});
   var moon = schema.normalize('moon', {id: "moon123", name: "titan"});
   var planet = schema.normalize('planet', {id: "planet456", name: "jupiter"});
 
@@ -167,7 +167,7 @@ test("receive remove hasOne operation", function(){
 
 test("receive add to hasMany operation", function(){
   stop();
-  firebaseListener.subscribeToType('planet', {include: ['moons']});
+  firebaseListener.subscribeToType('planet', null, {include: ['moons']});
 
   var moon = schema.normalize('moon', {id: "moon123", name: "titan"});
   var planet = schema.normalize('planet', {id: "planet456", name: "jupiter"});
@@ -188,7 +188,7 @@ test("receive add to hasMany operation", function(){
 
 test("receive remove from hasMany operation", function(){
   stop();
-  firebaseListener.subscribeToType('planet', {include: ['moons']});
+  firebaseListener.subscribeToType('planet', null, {include: ['moons']});
 
   var moon = schema.normalize('moon', {id: "moon123", name: "titan"});
   var planet = schema.normalize('planet', {id: "planet456", name: "jupiter"});
