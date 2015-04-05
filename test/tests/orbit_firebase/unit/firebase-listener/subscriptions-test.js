@@ -216,8 +216,6 @@ test("subscribe to a record when it's hasOne is replaced", function(){
   var jupiter = { id: 'planet1', name: 'Jupiter' };
   var europa = { id: 'moon1', name: 'Europa' };
 
-  var capture = captureDidTransforms(firebaseListener, 5, {logOperations: true});
-
   all([
     firebaseClient.set('planet/planet1', jupiter),
     firebaseClient.set('moon/moon1', europa)
@@ -230,9 +228,8 @@ test("subscribe to a record when it's hasOne is replaced", function(){
   .then(function(){
     return firebaseClient.set('moon/moon1/planet', 'planet1');
 
-  });
-
-  capture.then(function(){
+  })
+  .then(function(){
     start();
     includesAll(firebaseListener.subscriptions(), [
       "moon/moon1/name:value",
@@ -251,8 +248,6 @@ test("subscribe to initial nested hasOne records", function(){
   var jupiter = { id: 'planet1', name: 'Jupiter', star: 'star1', moons: {'moon1': true} };
   var europa = { id: 'moon1', name: 'Europa', planet: 'planet1' };
 
-  var capture = captureDidTransforms(firebaseListener, 9, {logOperations: true});
-
   all([
     firebaseClient.set('star/star1', sun),
     firebaseClient.set('planet/planet1', jupiter),
@@ -261,11 +256,9 @@ test("subscribe to initial nested hasOne records", function(){
   ])
   .then(function(){
     return firebaseListener.subscribeToRecord('moon', 'moon1', buildOptions({include: ['planet.star']}));
-  });
 
-  capture.then(function(){
+  }).then(function(){
     start();
-    console.log("---> asserts");
     includesAll(firebaseListener.subscriptions(), [
       "moon/moon1/name:value",
       "moon/moon1/planet:value",
@@ -277,13 +270,46 @@ test("subscribe to initial nested hasOne records", function(){
       "star/star1/name:value",
       "star/star1:value"
     ]);
+
+  });
+
+});
+
+test("subscribe to initial nested hasMany records", function(){
+  stop();
+  var sun = { id: 'star1', name: "The Sun", planets: { 'planet1': true } };
+  var jupiter = { id: 'planet1', name: 'Jupiter', star: 'star1', moons: {'moon1': true} };
+  var europa = { id: 'moon1', name: 'Europa', planet: 'planet1' };
+
+  all([
+    firebaseClient.set('star/star1', sun),
+    firebaseClient.set('planet/planet1', jupiter),
+    firebaseClient.set('moon/moon1', europa)
+
+  ])
+  .then(function(){
+    return firebaseListener.subscribeToRecord('star', 'star1', buildOptions({include: ['planets.moons']}));
+
+  }).then(function(){
+    start();
+    includesAll(firebaseListener.subscriptions(), [
+      "moon/moon1/name:value",
+      "moon/moon1:value",
+      "planet/planet1/classification:value",
+      "planet/planet1/moons:child_added",
+      "planet/planet1/moons:child_removed",
+      "planet/planet1/name:value",
+      "planet/planet1:value",
+      "star/star1/name:value",
+      "star/star1/planets:child_added",
+      "star/star1/planets:child_removed",
+      "star/star1:value"
+    ]);
+
   });
 });
 
 // test("subscribe to added nested hasOne records", function(){
-// });
-
-// test("subscribe to initial nested hasMany records", function(){
 // });
 
 // test("subscribe to added nested hasMany records", function(){
