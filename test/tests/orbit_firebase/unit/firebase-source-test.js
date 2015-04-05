@@ -186,21 +186,18 @@ test("#find - can 'include' relationships", function(){
   var jupiter = { id: 'planet1', name: "Jupiter", moons: { 'moon1': true } };
   var europa = { id: 'moon1', name: 'Europa', planet: 'planet1' };
 
+  all([
+    source.add('planet', jupiter),
+    source.add('moon', europa)
+  ])
+  .then(function(){
+    return source.find('planet', 'planet1', {include: ['moons']});
 
-
-  firebaseClient.set('planet/planet1', jupiter);
-  firebaseClient.set('moon/moon1', europa);
-
-  wait(5000).then(function(){
-    console.log("----> adding subscriptions");
-    source.find('planet', 'planet1', {include: ['moons']})
-    .then(function(){
-      console.log("----> asserts");
-      start();
-      var sourceEuropa = source.retrieve(['moon', 'moon1']);
-      equal(sourceEuropa.id, europa.id);
-    });
-
+  })
+  .then(function(){
+    start();
+    var sourceEuropa = source.retrieve(['moon', 'moon1']);
+    equal(sourceEuropa.id, europa.id);
   });
 });
 
