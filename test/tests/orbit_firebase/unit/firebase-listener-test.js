@@ -126,13 +126,14 @@ test("receive update attribute operation", function(){
   });
 });
 
+// wip
 test("receive replace hasOne operation", function(){
   stop();
   firebaseListener.subscribeToType('moon', null, {include: ['planet']});
   var moon = schema.normalize('moon', {id: "moon123", name: "titan"});
   var planet = schema.normalize('planet', {id: "planet456", name: "jupiter"});
 
-  var receiveOperation = captureDidTransform(firebaseListener, 7, {logOperations: true});
+  var receiveOperation = captureDidTransform(firebaseListener, 8, {logOperations: true});
 
   firebaseClient.set('moon/moon123', moon);
   firebaseClient.set('planet/planet456', planet);

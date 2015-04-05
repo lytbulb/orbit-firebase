@@ -311,7 +311,7 @@ test("subscribe to initial nested hasMany records", function(){
   });
 });
 
-test("subscribe to added nested hasOne records", function(){
+test("subscribe to added nested hasMany records", function(){
   stop();
   var sun = { id: 'star1', name: "The Sun", planets: { 'planet1': true } };
   var jupiter = { id: 'planet1', name: 'Jupiter', star: 'star1', moons: {'moon1': true} };
@@ -328,21 +328,6 @@ test("subscribe to added nested hasOne records", function(){
 
   })
   .then(function(){
-    start();
-    includesAll(firebaseListener.subscriptions(), [
-      "planet/planet1/classification:value",
-      "planet/planet1/name:value",
-      "planet/planet1:value",
-      "star/star1/name:value",
-      "star/star1/planets:child_added",
-      "star/star1/planets:child_removed",
-      "star/star1:value"
-    ]);
-    stop();
-
-  })
-  .then(function(){
-    console.log("---> changing includes")
     return firebaseListener.subscribeToRecord('star', 'star1', buildOptions({include: ['planets.moons']}));
 
   })
@@ -365,5 +350,38 @@ test("subscribe to added nested hasOne records", function(){
   });
 });
 
-// test("subscribe to added nested hasMany records", function(){
-// });
+test("subscribe to added nested hasOne records", function(){
+  stop();
+  var sun = { id: 'star1', name: "The Sun", planets: { 'planet1': true } };
+  var jupiter = { id: 'planet1', name: 'Jupiter', star: 'star1', moons: {'moon1': true} };
+  var europa = { id: 'moon1', name: 'Europa', planet: 'planet1' };
+
+  all([
+    firebaseClient.set('star/star1', sun),
+    firebaseClient.set('planet/planet1', jupiter),
+    firebaseClient.set('moon/moon1', europa)
+
+  ])
+  .then(function(){
+    return firebaseListener.subscribeToRecord('moon', 'moon1', buildOptions({include: ['planet']}));
+
+  })
+  .then(function(){
+    return firebaseListener.subscribeToRecord('moon', 'moon1', buildOptions({include: ['planet.star']}));
+
+  }).then(function(){
+    start();
+    includesAll(firebaseListener.subscriptions(), [
+      "moon/moon1/name:value",
+      "moon/moon1/planet:value",
+      "moon/moon1:value",
+      "planet/planet1/classification:value",
+      "planet/planet1/name:value",
+      "planet/planet1/star:value",
+      "planet/planet1:value",
+      "star/star1/name:value",
+      "star/star1:value"
+    ]);
+
+  });
+});
