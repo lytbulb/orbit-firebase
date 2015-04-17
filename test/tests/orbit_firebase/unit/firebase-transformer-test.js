@@ -26,7 +26,8 @@ var schemaDefinition = {
     planet: {
       attributes: {
         name: {type: 'string'},
-        classification: {type: 'string'}
+        classification: {type: 'string'},
+        birthDate: {type: 'date'}
       },
       links: {
         moons: {type: 'hasMany', model: 'moon', inverse: 'planet'},
@@ -79,7 +80,7 @@ module("OC - FirebaseTransformer", {
     firebaseTransformer = new FirebaseTransformer(firebaseClient, schema, serializer, cache);
   },
 
-  teardown: function() {  
+  teardown: function() {
   }
 });
 
@@ -134,6 +135,26 @@ test("can replace attribute", function(){
   });
 });
 
+test("can replace date attribute", function(){
+  expect(1);
+  stop();
+  var originalDate = new Date(1428555600000);
+  var modifiedDate = new Date(1428555800000);
+
+  firebaseTransformer.transform(op('add', 'planet/1', {birthDate: originalDate}))
+  .then(function(){
+    return firebaseTransformer.transform(op('replace', 'planet/1/birthDate', modifiedDate));
+
+  })
+  .then(function(){
+    firebaseClient.valueAt('planet/1').then(function(planet){
+      start();
+      equal(planet.birthDate, modifiedDate.getTime());
+    });
+
+  });
+});
+
 test("can add attribute", function(){
   expect(1);
   stop();
@@ -172,7 +193,7 @@ test("add link - set hasOne", function(){
       equal(firebasePlanetId, planetId);
     });
 
-  });  
+  });
 });
 
 test("replace link - replace hasOne", function(){
@@ -191,7 +212,7 @@ test("replace link - replace hasOne", function(){
       equal(firebasePlanetId, planetId);
     });
 
-  });  
+  });
 });
 
 test("remove link - remove hasOne", function(){
@@ -210,7 +231,7 @@ test("remove link - remove hasOne", function(){
       ok(!firebasePlanetId);
     });
 
-  });  
+  });
 });
 
 /////////////////////////////////////////////////////////////////////////////
@@ -253,7 +274,7 @@ test("remove link - remove hasOne", function(){
 //       deepEqual(firebaseMoonIds, moonIds);
 //     });
 
-//   });   
+//   });
 // });
 
 // test("remove link - remove from a hasMany that actsAsOrderedSet", function(){
@@ -267,7 +288,7 @@ test("remove link - remove hasOne", function(){
 
 //   })
 //   .then(function(){
-//     return firebaseTransformer.transform(op('remove', 'planet/1/__rel/moons/0'))    
+//     return firebaseTransformer.transform(op('remove', 'planet/1/__rel/moons/0'))
 //   })
 //   .then(function(){
 //     firebaseClient.valueAt('planet/1/moons').then(function(firebaseMoonIds){
@@ -275,7 +296,7 @@ test("remove link - remove hasOne", function(){
 //       deepEqual(firebaseMoonIds, [2,3]);
 //     });
 
-//   });   
+//   });
 // });
 
 
@@ -319,7 +340,7 @@ test("replace link - set hasMany", function(){
       deepEqual(firebaseMoonIds, moonIds);
     });
 
-  });   
+  });
 });
 
 test("remove link - remove from a hasMany", function(){
@@ -341,7 +362,7 @@ test("remove link - remove from a hasMany", function(){
       deepEqual(firebaseMoons, {"abc2": true, "abc3": true});
     });
 
-  });   
+  });
 });
 
 /////////////////////////////////////////////////////////////////////////////
@@ -358,7 +379,7 @@ test("meta is applied directly to the cache", function(){
   .then(function(){
     start();
     equal(cache.retrieve('moon/1/__ref'), 'abc123', "cache has been updated");
-  });   
+  });
 });
 
 
