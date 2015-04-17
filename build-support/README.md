@@ -1,4 +1,4 @@
-# orbit-builds
+# orbit-firebase-builds
 
 Distributable builds for [orbit-firebase](https://github.com/opsb/orbit-firebase).
 
