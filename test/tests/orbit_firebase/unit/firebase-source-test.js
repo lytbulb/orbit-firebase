@@ -81,7 +81,7 @@ test("#add - can add record", function(){
 
     all([
       firebaseClient.valueAt(path),
-      firebaseClient.valueAt('operations')
+      firebaseClient.valueAt('operation')
 
     ]).then(spread(function(storedPlanet, operations){
       start();
@@ -123,7 +123,7 @@ test("#patch - can patch records", function() {
     });
 
   }).then(function(){
-    firebaseClient.valueAt('operations').then(function(operations){
+    firebaseClient.valueAt('operation').then(function(operations){
       start();
 
       var operationKey = Object.keys(operations)[0];
@@ -158,7 +158,7 @@ test("#remove - can delete records", function() {
     });
 
   }).then(function(){
-    firebaseClient.valueAt('operations').then(function(operations){
+    firebaseClient.valueAt('operation').then(function(operations){
       start();
 
       var operationKey = Object.keys(operations)[1];
@@ -284,7 +284,7 @@ test("#addLink - can add to hasMany", function() {
     stop();
 
   }).then(function(){
-    firebaseClient.valueAt('operations').then(function(operations){
+    firebaseClient.valueAt('operation').then(function(operations){
       start();
       var operationKey = Object.keys(operations)[2];
       var operation = operations[operationKey];
@@ -324,7 +324,7 @@ test('#addLink - can set hasOne link', function(){
     stop();
 
   }).then(function(){
-    firebaseClient.valueAt('operations').then(function(operations){
+    firebaseClient.valueAt('operation').then(function(operations){
       start();
       var operationKey = Object.keys(operations)[2];
       var operation = operations[operationKey];
@@ -367,7 +367,7 @@ test("#removeLink - can remove from a hasMany relationship", function() {
     stop();
 
   }).then(function(){
-    firebaseClient.valueAt('operations').then(function(operations){
+    firebaseClient.valueAt('operation').then(function(operations){
       start();
       var operationKey = Object.keys(operations)[2];
       var operation = operations[operationKey];
@@ -445,7 +445,7 @@ test("#removeLink - can remove a hasOne relationship", function() {
     stop();
 
   }).then(function(){
-    firebaseClient.valueAt('operations').then(function(operations){
+    firebaseClient.valueAt('operation').then(function(operations){
       start();
       var operationKey = Object.keys(operations)[2];
       var operation = operations[operationKey];
