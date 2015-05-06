@@ -6,7 +6,8 @@ import Source from 'orbit-common/source';
 import FirebaseSource from 'orbit-firebase/firebase-source';
 import FirebaseClient from 'orbit-firebase/firebase-client';
 import { Promise, all, hash, denodeify,resolve, on, defer, map } from 'rsvp';
-import { isArray } from 'orbit/lib/objects';
+import { isArray, clone } from 'orbit/lib/objects';
+import { spread } from 'orbit/lib/functions';
 import { nextEventPromise, captureDidTransforms, wait } from 'tests/test-helper';
 
 var schema,
@@ -65,30 +66,43 @@ module("OC - FirebaseSource", {
 });
 
 test("#add - can add record", function(){
-  expect(7);
+  expect(11);
   var planetDetails = {name: 'Jupiter', classification: 'gas giant'};
 
   stop();
 
-  source.add('planet', planetDetails).then(function(cachedPlanet){
+  source.add('planet', clone(planetDetails)).then(function(planet){
     start();
-    ok(cachedPlanet.id, "orbit id should be defined");
-    equal(planetDetails.name, cachedPlanet.name, "cache planet name");
-    equal(planetDetails.classification, cachedPlanet.classification, "cache planet classification");
+    ok(planet.id, "orbit id should be defined");
+    equal(planetDetails.name, planet.name, "cache planet name");
+    equal(planetDetails.classification, planet.classification, "cache planet classification");
     stop();
-    var path = ['planet', cachedPlanet.id].join("/");
-    firebaseRef.child(path).once('value', function(snapshot){
+    var path = ['planet', planet.id].join("/");
+
+    all([
+      firebaseClient.valueAt(path),
+      firebaseClient.valueAt('operations')
+
+    ]).then(spread(function(storedPlanet, operations){
       start();
-      var stored = snapshot.val();
-      ok(planetDetails.id, 'add planet id');
-      equal(planetDetails.id, stored.id, "store planet id");
-      equal(planetDetails.name, stored.name, "store planet name");
-      equal(planetDetails.classification, stored.classification, "store planet classification");
-    });
+
+      ok(storedPlanet.id, 'add planet id');
+      equal(planetDetails.name, storedPlanet.name, "store planet name");
+      equal(planetDetails.classification, storedPlanet.classification, "store planet classification");
+
+      var operationKey = Object.keys(operations)[0];
+      var operation = operations[operationKey];
+      equal(operation.op, 'add', "op included in operation");
+      equal(operation.path, 'planet/' + storedPlanet.id, "path included in operation");
+      equal(operation.value.name, planetDetails.name, "name included in operation");
+      equal(operation.value.classification, planetDetails.classification, "classification included in operation");
+      ok(/\d+:pending/.test(operation.jobStatus), "job status included in operation");
+    }));
   });
 });
 
 test("#patch - can patch records", function() {
+  expect(7);
   stop();
   var _this = this;
 
@@ -98,31 +112,63 @@ test("#patch - can patch records", function() {
   .then(function(addedPlanet){
     planet = addedPlanet;
     return source.patch('planet', {id: addedPlanet.id}, 'classification', 'iceball');
+
   })
   .then(function(){
-      firebaseRef.child('planet/' + planet.id + '/classification').once('value', function(snapshot){
+    return firebaseRef.child('planet/' + planet.id + '/classification').once('value', function(snapshot){
       start();
       equal(snapshot.val(), 'iceball');
       equal(source.retrieve(["planet", planet.id]).classification, 'iceball');
+      stop();
     });
+
+  }).then(function(){
+    firebaseClient.valueAt('operations').then(function(operations){
+      start();
+
+      var operationKey = Object.keys(operations)[0];
+      var operation = operations[operationKey];
+      equal(operation.op, 'add', "op included in operation");
+      equal(operation.path, 'planet/' + planet.id, "path included in operation");
+      equal(operation.value.name, planetDetails.name, "name included in operation");
+      equal(operation.value.classification, planetDetails.classification, "classification included in operation");
+      ok(/\d+:pending/.test(operation.jobStatus), "job status included in operation");
+    });
+
   });
 });
 
 test("#remove - can delete records", function() {
-  expect(2);
+  expect(6);
   stop();
   var planetDetails = {name: 'Jupiter', classification: 'gas giant'};
+  var planet;
 
-  source.add('planet', planetDetails).then(function(planet){
-    source.remove('planet', planet.id).then(function(){
+  source.add('planet', planetDetails).then(function(addedPlanet){
+    planet = addedPlanet;
+    return source.remove('planet', planet.id).then(function(){
       var path = ['planet', planet.id].join("/");
 
-      firebaseRef.child(path).once('value', function(snapshot){
+      return firebaseRef.child(path).once('value', function(snapshot){
         start();
         ok(!snapshot.val(), "remove record from firebase");
         ok(!source.retrieve(["planet", planet.id]), "remove record from cache");
+        stop();
       });
     });
+
+  }).then(function(){
+    firebaseClient.valueAt('operations').then(function(operations){
+      start();
+
+      var operationKey = Object.keys(operations)[1];
+      var operation = operations[operationKey];
+      equal(operation.op, 'remove', "op included in operation");
+      equal(operation.path, 'planet/' + planet.id, "path included in operation");
+      ok(!operation.value, "operation does not include a value");
+      ok(/\d+:pending/.test(operation.jobStatus), "job status included in operation");
+    });
+
   });
 });
 
@@ -214,7 +260,7 @@ test("#find - returns empty when no results for find all", function() {
 
 
 test("#addLink - can add to hasMany", function() {
-  expect(2);
+  expect(6);
   stop();
 
   var titan, saturn, fbTitan, fbSaturn;
@@ -235,11 +281,25 @@ test("#addLink - can add to hasMany", function() {
     start();
     ok(fbSaturn.moons[titan.id], "firebase should have added  titan to saturn");
     equal(source.retrieveLink('planet', saturn.id, 'moons'), titan.id, "cache should have added titan to saturn");
+    stop();
+
+  }).then(function(){
+    firebaseClient.valueAt('operations').then(function(operations){
+      start();
+      var operationKey = Object.keys(operations)[2];
+      var operation = operations[operationKey];
+      equal(operation.op, 'add', "op included in operation");
+
+      equal(operation.path, 'planet/' + fbSaturn.id + '/__rel/moons/' + fbTitan.id);
+      equal(operation.value, true, "operation included value");
+      ok(/\d+:pending/.test(operation.jobStatus), "job status included in operation");
+    });
+
   });
 });
 
 test('#addLink - can set hasOne link', function(){
-  expect(2);
+  expect(6);
   stop();
 
   var titan, saturn, fbTitan, fbSaturn;
@@ -247,22 +307,39 @@ test('#addLink - can set hasOne link', function(){
   all([
     source.add('planet', {name: "Saturn"}).then(function(sourceSaturn){saturn = sourceSaturn;}),
     source.add('moon', {name: "Titan"}).then(function(sourceTitan){titan = sourceTitan;}),
+
   ])
   .then(function(){
     return source.addLink('moon', titan.id, 'planet', saturn.id);
+
   })
   .then(function(){
     return firebaseClient.valueAt('moon/' + titan.id);
+
   })
   .then(function(fbTitan){
     start();
     equal(fbTitan.planet, saturn.id, "titan is in orbit around saturn");
     equal(source.retrieveLink('moon', titan.id, "planet"), saturn.id, "cache should have added saturn to titan");
+    stop();
+
+  }).then(function(){
+    firebaseClient.valueAt('operations').then(function(operations){
+      start();
+      var operationKey = Object.keys(operations)[2];
+      var operation = operations[operationKey];
+      equal(operation.op, 'replace', "op included in operation");
+
+      equal(operation.path, "moon/" + titan.id + "/__rel/planet");
+      equal(operation.value, saturn.id, "operation included value");
+      ok(/\d+:pending/.test(operation.jobStatus), "job status included in operation");
+    });
+
   });
 });
 
 test("#removeLink - can remove from a hasMany relationship", function() {
-  expect(2);
+  expect(6);
   stop();
 
   var titan, saturn, fbTitan, fbSaturn;
@@ -287,6 +364,20 @@ test("#removeLink - can remove from a hasMany relationship", function() {
     start();
     ok(!fbSaturn.moons, "saturn is no longer orbitted by titan");
     equal(source.retrieveLink('planet', saturn.id, 'moons').length, 0, "cache should have removed titan from saturn");
+    stop();
+
+  }).then(function(){
+    firebaseClient.valueAt('operations').then(function(operations){
+      start();
+      var operationKey = Object.keys(operations)[2];
+      var operation = operations[operationKey];
+      equal(operation.op, 'add', "op included in operation");
+
+      equal(operation.path, "planet/" + fbSaturn.id + "/__rel/moons/" + fbTitan.id);
+      equal(operation.value, true, "operation included value");
+      ok(/\d+:pending/.test(operation.jobStatus), "job status included in operation");
+    });
+
   });
 });
 
@@ -323,7 +414,7 @@ test("#removeLink - can remove from a hasMany relationship", function() {
 // });
 
 test("#removeLink - can remove a hasOne relationship", function() {
-  expect(4);
+  expect(8);
   stop();
 
   var titan, saturn, fbTitan, fbSaturn;
@@ -351,6 +442,20 @@ test("#removeLink - can remove a hasOne relationship", function() {
 
     equal(source.retrieveLink('planet', saturn.id, 'moons').length, 0, "cache should have removed titan from saturn");
     ok(!source.retrieveLink('moon', titan.id, "planet"), "cache should have removed saturn from titan");
+    stop();
+
+  }).then(function(){
+    firebaseClient.valueAt('operations').then(function(operations){
+      start();
+      var operationKey = Object.keys(operations)[2];
+      var operation = operations[operationKey];
+      equal(operation.op, 'replace', "op included in operation");
+
+      equal(operation.path, "moon/" + fbTitan.id + "/__rel/planet");
+      equal(operation.value, fbSaturn.id, "operation included value");
+      ok(/\d+:pending/.test(operation.jobStatus), "job status included in operation");
+    });
+
   });
 });
 
