@@ -2,13 +2,19 @@
 set -e
 
 if [[ ! -d releases ]]; then
-  echo -n "---> Which git repo do you want to use for releases? "
-  read GIT_REPO
+  if [ -z "$GIT_REPO" ]; then
+    echo -n "---> Which git repo do you want to use for releases? "
+    read GIT_REPO
+  fi
+
   git clone $GIT_REPO releases
 fi
 
-echo -n "---> Name for release tag? "
-read RELEASE_VERSION
+if [ -z "$RELEASE_VERSION" ]; then
+  echo -n "---> Name for release tag? "
+  read RELEASE_VERSION
+fi
+
 npm run build
 rm -f releases/*
 find build -maxdepth 1 -type f -exec cp {} releases \;
