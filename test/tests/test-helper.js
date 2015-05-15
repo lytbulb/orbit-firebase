@@ -65,17 +65,18 @@ function wait(time){
 }
 
 function prepareFirebaseClient(){
-  var firebaseRef = new Firebase("https://burning-torch-3002.firebaseio.com/test");
+  var firebaseUrl = "%FIREBASE_URL";
+  var firebaseSecret = "%FIREBASE_SECRET";
+  var firebaseRef = new Firebase(firebaseUrl);
   var firebaseClient = new FirebaseClient(firebaseRef);
 
-  var secret = "qhZ7kS15BjTXbwGLkXtqxGP6HLxDTzUDlEivT70M";
   return firebaseClient
-    .authenticateAdmin(secret)
+    .authenticateAdmin(firebaseSecret)
     .then(function(){
       return firebaseClient.set("/", null);
     })
     .then(function(){
-      return firebaseClient.authenticateUser(secret, {uid: "1"});
+      return firebaseClient.authenticateUser(firebaseSecret, {uid: "1"});
     })
     .then(function(){
       return firebaseClient;

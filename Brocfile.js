@@ -139,6 +139,15 @@ mainWithTests = concat(new compileES6(mainWithTests), {
   outputFile: '/assets/tests.amd.js'
 });
 
+
+mainWithTests = replace(mainWithTests, {
+  files: "/assets/tests.amd.js",
+  patterns: [
+    {match: /%FIREBASE_URL/g, replacement: process.env.ORBIT_FIREBASE_FIREBASE_URL},
+    {match: /%FIREBASE_SECRET/g, replacement: process.env.ORBIT_FIREBASE_FIREBASE_SECRET},
+  ]
+});
+
 var vendor = concat('bower_components', {
   inputFiles: [
     'jquery/dist/jquery.js',
