@@ -1,6 +1,7 @@
 /* global Firebase */
 import FirebaseClient from 'orbit-firebase/firebase-client';
 import Orbit from 'orbit/main';
+import { prepareFirebaseClient } from 'tests/test-helper';
 
 var firebaseRef,
     firebaseClient;
@@ -9,9 +10,12 @@ module("OF - FirebaseClient", {
   setup: function() {
     Orbit.Promise = Promise;
 
-    firebaseRef = new Firebase("https://orbit-firebase.firebaseio.com/test");
-    firebaseRef.set(null);
-    firebaseClient = new FirebaseClient(firebaseRef);
+    stop();
+    prepareFirebaseClient().then(function(preparedFirebaseClient){
+      firebaseClient = preparedFirebaseClient;
+      firebaseRef = firebaseClient.firebaseRef
+      start();
+    });
   },
 
   teardown: function() {
@@ -63,7 +67,7 @@ test("#valueAt", function(){
       start();
       equal(value, "abc", "value was retrieved");
     });
-  });  
+  });
 });
 
 test("#appendToArray - empty array", function(){

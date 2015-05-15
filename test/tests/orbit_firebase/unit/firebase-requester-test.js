@@ -13,7 +13,7 @@ import FirebaseClient from 'orbit-firebase/firebase-client';
 import FirebaseTransformer from 'orbit-firebase/firebase-transformer';
 
 import AddRecordTransformer from 'orbit-firebase/transformers/add-record';
-import { op } from 'tests/test-helper';
+import { op, prepareFirebaseClient } from 'tests/test-helper';
 
 var schemaDefinition = {
   modelDefaults: {
@@ -68,13 +68,14 @@ module("OC - FirebaseRequester", {
 
     var schema = new Schema(schemaDefinition);
 
-    var firebaseRef = new Firebase("https://burning-torch-3002.firebaseio.com/test");
-    firebaseRef.set(null);
+    stop();
+    prepareFirebaseClient().then(function(preparedFirebaseClient){
+      firebaseClient = preparedFirebaseClient;
+      var serializer = new FirebaseSerializer(schema);
+      firebaseRequester = new FirebaseRequester(firebaseClient, schema, serializer);
 
-    firebaseClient = new FirebaseClient(firebaseRef);
-    var serializer = new FirebaseSerializer(schema);
-
-    firebaseRequester = new FirebaseRequester(firebaseClient, schema, serializer);
+      start();
+    });
   },
 
   teardown: function() {

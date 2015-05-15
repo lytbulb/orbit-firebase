@@ -9,6 +9,7 @@ import { captureDidTransform, captureDidTransforms, op } from 'tests/test-helper
 import { fop } from 'orbit-firebase/lib/operation-utils';
 import { Promise, all, resolve } from 'rsvp';
 import { buildOptions } from 'orbit-firebase/subscriptions/options';
+import { prepareFirebaseClient } from 'tests/test-helper';
 
 var schemaDefinition = {
   modelDefaults: {
@@ -68,14 +69,13 @@ module("OF - FirebaseListener - subscriptions", {
     Orbit.all = all;
     Orbit.resolve = resolve;
 
-    var firebaseRef = new Firebase("https://orbit-firebase.firebaseio.com/test");
-    firebaseRef.set(null);
-    firebaseClient = new FirebaseClient(firebaseRef);
-
     schema = new Schema(schemaDefinition);
     var serializer = new FirebaseSerializer(schema);
 
-    firebaseListener = new FirebaseListener(firebaseRef, schema, serializer);
+    prepareFirebaseClient().then(function(preparedFirebaseClient){
+      firebaseClient = preparedFirebaseClient;
+      firebaseListener = new FirebaseListener(firebaseClient.firebaseRef, schema, serializer);
+    });
   },
 
   teardown: function() {
@@ -152,6 +152,38 @@ test('subscribe to record including a hasMany', function(){
   all([
     firebaseClient.set('planet/planet1', jupiter),
     firebaseClient.set('moon/moon1', europa)
+
+  ])
+  .then(function(){
+    return firebaseListener.subscribeToRecord('planet', 'planet1', buildOptions({include: ['moons']}));
+
+  })
+  .then(function(){
+    start();
+
+    includesAll(firebaseListener.subscriptions(), [
+      'planet/planet1/classification:value',
+      'planet/planet1/moons:child_added',
+      'planet/planet1/moons:child_removed',
+      'planet/planet1/name:value',
+      'planet/planet1:value',
+      'moon/moon1:value',
+      'moon/moon1/name:value'
+    ]);
+
+  });
+});
+
+test('subscribe to record including a hasMany with some restricted members', function(){
+  stop();
+  var jupiter = { id: 'planet1', name: 'Jupiter', moons: { 'moon1': true } };
+  var europa = { id: 'moon1', name: 'Europa', planet: 'planet1' };
+  var ganymede = { id: 'moon2', name: 'Ganymede', planet: 'planet1' };
+
+  all([
+    firebaseClient.set('planet/planet1', jupiter),
+    firebaseClient.set('moon/moon1', europa),
+    firebaseClient.set('moon/moon2', ganymede)
 
   ])
   .then(function(){

@@ -73,14 +73,16 @@ module("OF - FirebaseListener", {
     Orbit.all = all;
     Orbit.resolve = resolve;
 
-    var firebaseRef = new Firebase("https://orbit-firebase.firebaseio.com/test");
-    firebaseRef.set(null);
-    firebaseClient = new FirebaseClient(firebaseRef);
-
     schema = new Schema(schemaDefinition);
     var serializer = new FirebaseSerializer(schema);
 
-    firebaseListener = new FirebaseListener(firebaseRef, schema, serializer);
+    stop();
+    prepareFirebaseClient().then(function(preparedFirebaseClient){
+      firebaseClient = preparedFirebaseClient;
+      firebaseRef = firebaseClient.firebaseRef
+      firebaseListener = new FirebaseListener(firebaseRef, schema, serializer);
+      start();
+    });
   },
 
   teardown: function() {

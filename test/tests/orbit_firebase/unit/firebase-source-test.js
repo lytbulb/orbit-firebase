@@ -1,4 +1,3 @@
-/* global Firebase */
 import Orbit from 'orbit/main';
 import { uuid } from 'orbit/lib/uuid';
 import Schema from 'orbit-common/schema';
@@ -8,7 +7,7 @@ import FirebaseClient from 'orbit-firebase/firebase-client';
 import { Promise, all, allSettled, hash, denodeify,resolve, on, defer, map } from 'rsvp';
 import { isArray, clone } from 'orbit/lib/objects';
 import { spread } from 'orbit/lib/functions';
-import { nextEventPromise, captureDidTransforms, wait } from 'tests/test-helper';
+import { nextEventPromise, captureDidTransforms, wait, prepareFirebaseClient } from 'tests/test-helper';
 
 var schema,
     source,
@@ -53,22 +52,14 @@ module("OC - FirebaseSource", {
       }
     });
 
-    firebaseRef = new Firebase("https://burning-torch-3002.firebaseio.com/test");
-    firebaseClient = new FirebaseClient(firebaseRef);
-
     stop();
-    var secret = "qhZ7kS15BjTXbwGLkXtqxGP6HLxDTzUDlEivT70M";
-    firebaseClient.authenticateAdmin(secret)
-      .then(function(){
-        return firebaseClient.set("/", null);
-      })
-      .then(function(){
-        return firebaseClient.authenticateUser(secret, {uid: "1"});
-      })
-      .then(function(){
-        source = new FirebaseSource(schema, {firebaseRef: firebaseRef});
-        start();
-      });
+    prepareFirebaseClient().then(function(preparedFirebaseClient){
+      firebaseClient = preparedFirebaseClient;
+      firebaseRef = firebaseClient.firebaseRef;
+      source = new FirebaseSource(schema, {firebaseRef: firebaseRef});
+
+      start();
+    });
   },
 
   teardown: function() {

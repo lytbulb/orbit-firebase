@@ -1,8 +1,9 @@
-/* global clearTimeout */
+/* global clearTimeout, Firebase */
 import Operation from 'orbit/operation';
 import { fop } from 'orbit-firebase/lib/operation-utils';
 import { on } from 'rsvp';
 import Orbit from 'orbit/main';
+import FirebaseClient from 'orbit-firebase/firebase-client';
 
 on('error', function(reason){
   console.log(reason);
@@ -63,5 +64,23 @@ function wait(time){
   });
 }
 
+function prepareFirebaseClient(){
+  var firebaseRef = new Firebase("https://burning-torch-3002.firebaseio.com/test");
+  var firebaseClient = new FirebaseClient(firebaseRef);
 
-export { nextEventPromise, op, captureDidTransform, captureDidTransforms, wait };
+  var secret = "qhZ7kS15BjTXbwGLkXtqxGP6HLxDTzUDlEivT70M";
+  return firebaseClient
+    .authenticateAdmin(secret)
+    .then(function(){
+      return firebaseClient.set("/", null);
+    })
+    .then(function(){
+      return firebaseClient.authenticateUser(secret, {uid: "1"});
+    })
+    .then(function(){
+      return firebaseClient;
+    });
+}
+
+
+export { nextEventPromise, op, captureDidTransform, captureDidTransforms, wait, prepareFirebaseClient };

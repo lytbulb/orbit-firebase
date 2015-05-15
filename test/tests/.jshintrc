@@ -32,7 +32,8 @@
     "click",
     "find",
     "requireModule",
-    "sinon"
+    "sinon",
+    "Firebase"
   ],
   "node" : false,
   "browser" : false,
