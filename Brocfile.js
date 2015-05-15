@@ -144,6 +144,7 @@ var vendor = concat('bower_components', {
     'jquery/dist/jquery.js',
     'rsvp/rsvp.js',
     'firebase/firebase-debug.js',
+    'firebase-token-generator/dist/firebase-token-generator.js',
     'orbit.js/orbit.amd.js',
     'orbit.js/orbit-common.amd.js'],
   outputFile: '/assets/vendor.js'

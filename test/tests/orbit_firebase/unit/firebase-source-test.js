@@ -5,7 +5,7 @@ import Schema from 'orbit-common/schema';
 import Source from 'orbit-common/source';
 import FirebaseSource from 'orbit-firebase/firebase-source';
 import FirebaseClient from 'orbit-firebase/firebase-client';
-import { Promise, all, hash, denodeify,resolve, on, defer, map } from 'rsvp';
+import { Promise, all, allSettled, hash, denodeify,resolve, on, defer, map } from 'rsvp';
 import { isArray, clone } from 'orbit/lib/objects';
 import { spread } from 'orbit/lib/functions';
 import { nextEventPromise, captureDidTransforms, wait } from 'tests/test-helper';
@@ -21,6 +21,7 @@ module("OC - FirebaseSource", {
   setup: function() {
     Orbit.Promise = Promise;
     Orbit.all = all;
+    Orbit.allSettled = allSettled;
     Orbit.resolve = resolve;
     Orbit.map = map;
 
@@ -42,7 +43,8 @@ module("OC - FirebaseSource", {
         },
         moon: {
           attributes: {
-            name: {type: 'string'}
+            name: {type: 'string'},
+            isProtected: {type: 'boolean'}
           },
           links: {
             planet: {type: 'hasOne', model: 'planet', inverse: 'moons'}
@@ -52,10 +54,21 @@ module("OC - FirebaseSource", {
     });
 
     firebaseRef = new Firebase("https://burning-torch-3002.firebaseio.com/test");
-    firebaseRef.set(null);
-
-    source = new FirebaseSource(schema, {firebaseRef: firebaseRef});
     firebaseClient = new FirebaseClient(firebaseRef);
+
+    stop();
+    var secret = "qhZ7kS15BjTXbwGLkXtqxGP6HLxDTzUDlEivT70M";
+    firebaseClient.authenticateAdmin(secret)
+      .then(function(){
+        return firebaseClient.set("/", null);
+      })
+      .then(function(){
+        return firebaseClient.authenticateUser(secret, {uid: "1"});
+      })
+      .then(function(){
+        source = new FirebaseSource(schema, {firebaseRef: firebaseRef});
+        start();
+      });
   },
 
   teardown: function() {
@@ -499,6 +512,31 @@ test("#findLinked - can find has-many linked records", function() {
   ])
   .then(function(){
     return source.addLink('planet', saturn.id, 'moons', titan.id);
+  })
+  .then(function(){
+    source.findLinked('planet', saturn.id, 'moons').then(function(moons){
+      start();
+      equal(moons.length, 1);
+    });
+  });
+});
+
+test("#findLinked - can filter has-many linked records based on permissions", function() {
+  expect(1);
+  stop();
+
+  var titan, saturn, rhea, fbTitan, fbSaturn;
+
+  all([
+    source.add('planet', {name: "Saturn"}).then(function(sourceSaturn){saturn = sourceSaturn;}),
+    source.add('moon', {name: "Titan"}).then(function(sourceTitan){titan = sourceTitan;}),
+    source.add('moon', {name: "Rhea", isProtected: true}).then(function(sourceRhea){rhea = sourceRhea;})
+  ])
+  .then(function(){
+    return all([
+      source.addLink('planet', saturn.id, 'moons', titan.id),
+      source.addLink('planet', saturn.id, 'moons', rhea.id)
+    ]);
   })
   .then(function(){
     source.findLinked('planet', saturn.id, 'moons').then(function(moons){

@@ -6,7 +6,7 @@ import Source from 'orbit-common/source';
 import FirebaseSource from 'orbit-firebase/firebase-source';
 import FirebaseSerializer from 'orbit-firebase/firebase-serializer';
 import FirebaseRequester from 'orbit-firebase/firebase-requester';
-import { Promise, all, hash, denodeify,resolve, on, defer, map } from 'rsvp';
+import { Promise, all, allSettled, hash, denodeify,resolve, on, defer, map } from 'rsvp';
 import { isArray } from 'orbit/lib/objects';
 
 import FirebaseClient from 'orbit-firebase/firebase-client';
@@ -62,6 +62,7 @@ module("OC - FirebaseRequester", {
   setup: function() {
     Orbit.Promise = Promise;
     Orbit.all = all;
+    Orbit.allSettled = allSettled;
     Orbit.resolve = resolve;
     Orbit.map = map;
 
@@ -76,7 +77,7 @@ module("OC - FirebaseRequester", {
     firebaseRequester = new FirebaseRequester(firebaseClient, schema, serializer);
   },
 
-  teardown: function() {  
+  teardown: function() {
   }
 });
 
@@ -106,12 +107,12 @@ test("find - all", function(){
   var saturn = {id: "abc2", name: "Saturn"};
 
   firebaseClient.set('planet/abc1', jupiter);
-  
+
   firebaseClient.set('planet/abc2', saturn)
   .then(function(){
     firebaseRequester.find('planet').then(function(planets){
       start();
-      
+
       equal(planets[0].id, jupiter.id, 'id included');
       equal(planets[0].name, jupiter.name, 'name included');
 
@@ -134,7 +135,7 @@ test("findLink - hasMany", function(){
       start();
       deepEqual(firebaseMoonIds, ['abc2', 'abc3']);
     });
-    
+
   });
 });
 

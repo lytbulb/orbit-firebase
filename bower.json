@@ -11,15 +11,16 @@
       "url": "https://github.com/opsb/orbit-firebase/blob/master/LICENSE"
     }
   ],
-  "ignore": [ ],
+  "ignore": [],
   "dependencies": {
     "orbit.js": "0.6.1",
-    "firebase": "~2.1.2"
+    "firebase": "~2.1.2",
+    "firebase-token-generator": "~2.0.0"
   },
   "devDependencies": {
     "jquery": "~1.11.1",
     "qunit": "~1.17.1",
     "rsvp": "~3.0.16",
-    "loader": "stefanpenner/loader.js#1.0.1"    
+    "loader": "stefanpenner/loader.js#1.0.1"
   }
 }

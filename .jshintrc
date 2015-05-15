@@ -18,7 +18,8 @@
     "start",
     "stop",
     "QUnit",
-    "sinon"
+    "sinon",
+    "FirebaseTokenGenerator"
   ],
   "node" : false,
   "browser" : false,
