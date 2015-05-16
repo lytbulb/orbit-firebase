@@ -142,7 +142,6 @@ test("receive update attribute operation", function(){
   });
 });
 
-// wip
 test("receive replace hasOne operation", function(){
   stop();
   firebaseListener.subscribeToType('moon', null, {include: ['planet']});
