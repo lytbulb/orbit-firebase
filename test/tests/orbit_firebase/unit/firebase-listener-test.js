@@ -5,7 +5,7 @@ import FirebaseListener from 'orbit-firebase/firebase-listener';
 import FirebaseClient from 'orbit-firebase/firebase-client';
 import { uuid } from 'orbit/lib/uuid';
 import Orbit from 'orbit/main';
-import { captureDidTransform, captureDidTransforms, op } from 'tests/test-helper';
+import { captureDidTransform, captureDidTransforms, op, prepareFirebaseClient } from 'tests/test-helper';
 import { fop } from 'orbit-firebase/lib/operation-utils';
 import { Promise, all, resolve } from 'rsvp';
 import { eq } from 'orbit/lib/eq';
@@ -79,8 +79,7 @@ module("OF - FirebaseListener", {
     stop();
     prepareFirebaseClient().then(function(preparedFirebaseClient){
       firebaseClient = preparedFirebaseClient;
-      firebaseRef = firebaseClient.firebaseRef
-      firebaseListener = new FirebaseListener(firebaseRef, schema, serializer);
+      firebaseListener = new FirebaseListener(firebaseClient.firebaseRef, schema, serializer);
       start();
     });
   },

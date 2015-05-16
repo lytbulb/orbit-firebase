@@ -72,9 +72,11 @@ module("OF - FirebaseListener - subscriptions", {
     schema = new Schema(schemaDefinition);
     var serializer = new FirebaseSerializer(schema);
 
+    stop();
     prepareFirebaseClient().then(function(preparedFirebaseClient){
       firebaseClient = preparedFirebaseClient;
       firebaseListener = new FirebaseListener(firebaseClient.firebaseRef, schema, serializer);
+      start();
     });
   },
 

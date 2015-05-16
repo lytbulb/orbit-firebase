@@ -13,7 +13,7 @@ module("OF - FirebaseClient", {
     stop();
     prepareFirebaseClient().then(function(preparedFirebaseClient){
       firebaseClient = preparedFirebaseClient;
-      firebaseRef = firebaseClient.firebaseRef
+      firebaseRef = firebaseClient.firebaseRef;
       start();
     });
   },
@@ -26,8 +26,8 @@ module("OF - FirebaseClient", {
 test("#set", function(){
 	stop();
 
-	firebaseClient.set("/", "abc").then(function(){
-    firebaseRef.once('value', function(snapshot){
+	firebaseClient.set("/moon/1", "abc").then(function(){
+    firebaseRef.child("/moon/1").once('value', function(snapshot){
       start();
       equal(snapshot.val(), "abc", "set value in firebase");
     });
@@ -37,8 +37,8 @@ test("#set", function(){
 test("#push", function(){
   stop();
 
-  firebaseClient.push("/", "abc").then(function(){
-    firebaseRef.once("value", function(snapshot){
+  firebaseClient.push("/planet", "abc").then(function(){
+    firebaseRef.child("/planet").once("value", function(snapshot){
       start();
       var key = Object.keys(snapshot.val())[0];
       equal(snapshot.val()[key], "abc", "value was added to array");
@@ -49,9 +49,9 @@ test("#push", function(){
 test("#remove", function(){
   stop();
 
-  firebaseRef.set("abc", function(){
-    firebaseClient.remove("/").then(function(){
-      firebaseRef.once("value", function(snapshot){
+  firebaseRef.set("/planet/abc", function(){
+    firebaseClient.remove("/planet/abc").then(function(){
+      firebaseRef.child("/planet/abc").once("value", function(snapshot){
         start();
         equal(snapshot.val(), null, "value was removed");
       });
@@ -62,8 +62,8 @@ test("#remove", function(){
 test("#valueAt", function(){
   stop();
 
-  firebaseRef.set("abc", function(){
-    firebaseClient.valueAt("/").then(function(value){
+  firebaseRef.child("/planet").set("abc", function(){
+    firebaseClient.valueAt("/planet").then(function(value){
       start();
       equal(value, "abc", "value was retrieved");
     });
@@ -73,8 +73,8 @@ test("#valueAt", function(){
 test("#appendToArray - empty array", function(){
   stop();
 
-  firebaseClient.appendToArray("/", "abc").then(function(){
-    firebaseRef.once("value", function(snapshot){
+  firebaseClient.appendToArray("/planet", "abc").then(function(){
+    firebaseRef.child("/planet").once("value", function(snapshot){
       start();
       deepEqual(snapshot.val(), ["abc"]);
     });
@@ -84,9 +84,9 @@ test("#appendToArray - empty array", function(){
 test("#appendToArray - existing array", function(){
   stop();
 
-  firebaseRef.set(["abc"], function(){
-    firebaseClient.appendToArray("/", "def").then(function(){
-      firebaseRef.once("value", function(snapshot){
+  firebaseRef.child("/planet").set(["abc"], function(){
+    firebaseClient.appendToArray("/planet", "def").then(function(){
+      firebaseRef.child("planet").once("value", function(snapshot){
         start();
         deepEqual(snapshot.val(), ["abc", "def"]);
       });
@@ -97,9 +97,9 @@ test("#appendToArray - existing array", function(){
 test("#removeFromArray", function(){
   stop();
 
-  firebaseRef.set(["abc"], function(){
-    firebaseClient.removeFromArray("/", "abc").then(function(){
-      firebaseRef.once("value", function(snapshot){
+  firebaseRef.child("/planet").set(["abc"], function(){
+    firebaseClient.removeFromArray("/planet", "abc").then(function(){
+      firebaseRef.child("planet").once("value", function(snapshot){
         start();
         deepEqual(snapshot.val(), null);
       });
@@ -110,9 +110,9 @@ test("#removeFromArray", function(){
 test("#removeFromArrayAt", function(){
   stop();
 
-  firebaseRef.set(["abc", "def", "ghi"], function(){
-    firebaseClient.removeFromArrayAt("/", 1).then(function(){
-      firebaseRef.once("value", function(snapshot){
+  firebaseRef.child("/planet").set(["abc", "def", "ghi"], function(){
+    firebaseClient.removeFromArrayAt("/planet", 1).then(function(){
+      firebaseRef.child("/planet").once("value", function(snapshot){
         start();
         deepEqual(snapshot.val(), ["abc", "ghi"]);
       });
