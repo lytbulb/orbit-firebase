@@ -43,46 +43,55 @@ var schemaDefinition = {
   }
 };
 
-var firebaseSerializer;
+var firebaseSerializer,
+    schema;
 
 module("OF - FirebaseSerializer", {
   setup: function(){
     Orbit.Promise = Promise;
 
-    var schema = new Schema(schemaDefinition);
+    schema = new Schema(schemaDefinition);
     firebaseSerializer = new FirebaseSerializer(schema);
   }
 });
 
 
 test("serialize - serializes dates", function(){
-  var europa = { id: 'p1', name: "Europa", birthDate: new Date(1428555600000), __rel: {} };
+  var jupiter = schema.normalize('planet', { id: 'p1', name: "Jupiter", birthDate: new Date(1428555600000) });
 
-  var serialized = firebaseSerializer.serialize('planet', europa);
+  var serialized = firebaseSerializer.serialize('planet', jupiter);
 
-  equal(serialized.birthDate, europa.birthDate.getTime(), 'birthDate was serialized');
+  equal(serialized.birthDate, jupiter.birthDate.getTime(), 'birthDate was serialized');
 });
 
 test("serialize - serializes null dates", function(){
-  var europa = { id: 'p1', name: "Europa", __rel: {} };
+  var jupiter = schema.normalize('planet', { id: 'p1', name: "Jupiter" });
 
-  var serialized = firebaseSerializer.serialize('planet', europa);
+  var serialized = firebaseSerializer.serialize('planet', jupiter);
 
   ok(!serialized.birthDate, 'null birthDate was serialized');
 });
 
-test("serialize - deserializes dates", function(){
-  var serializedEuropa = { id: "p1", name: "Europa", birthDate: 1428555600000 };
+test("deserialize - deserializes dates", function(){
+  var serializedJupiter = schema.normalize('planet', { id: "p1", name: "Jupiter", birthDate: 1428555600000 });
 
-  var deserialized = firebaseSerializer.deserialize('planet', serializedEuropa.id, serializedEuropa);
+  var deserialized = firebaseSerializer.deserialize('planet', serializedJupiter.id, serializedJupiter);
 
-  equal(deserialized.birthDate.getTime(), serializedEuropa.birthDate, 'birthDate was deserialized');
+  equal(deserialized.birthDate.getTime(), serializedJupiter.birthDate, 'birthDate was deserialized');
 });
 
-test("serialize - deserializes null dates", function(){
-  var serializedEuropa = { id: "p1", name: "Europa" };
+test("deserialize - deserializes null dates", function(){
+  var serializedJupiter = schema.normalize('planet', { id: "p1", name: "Jupiter" });
 
-  var deserialized = firebaseSerializer.deserialize('planet', serializedEuropa.id, serializedEuropa);
+  var deserialized = firebaseSerializer.deserialize('planet', serializedJupiter.id, serializedJupiter);
 
   ok(!deserialized.birthDate, 'null birthDate was deserialized');
+});
+
+test("deserialize - doesn't initialize links", function(){
+  var serializedJupiter = schema.normalize('planet', { id: "p1", name: "Jupiter" });
+
+  var deserialized = firebaseSerializer.deserialize('planet', serializedJupiter.id, serializedJupiter);
+
+  equal(deserialized.moons, undefined, "Moons are undefined");
 });

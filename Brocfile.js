@@ -19,6 +19,7 @@ var packages = [
               /orbit-firebase\/lib\/operation-utils.js/,
               /orbit-firebase\/lib\/schema-utils.js/,
               /orbit-firebase\/cache-source.js/,
+              /orbit-firebase\/operation-sequencer.js/,
               /orbit-firebase\/firebase-client.js/,
               /orbit-firebase\/firebase-connector.js/,
               /orbit-firebase\/firebase-serializer.js/,

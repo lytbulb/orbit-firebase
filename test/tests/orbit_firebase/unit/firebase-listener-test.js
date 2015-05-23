@@ -7,7 +7,7 @@ import { uuid } from 'orbit/lib/uuid';
 import Orbit from 'orbit/main';
 import { captureDidTransform, captureDidTransforms, op, prepareFirebaseClient } from 'tests/test-helper';
 import { fop } from 'orbit-firebase/lib/operation-utils';
-import { Promise, all, resolve } from 'rsvp';
+import { Promise, all, allSettled, resolve } from 'rsvp';
 import { eq } from 'orbit/lib/eq';
 import { any } from 'orbit-firebase/lib/array-utils';
 import Operation from 'orbit/operation';
@@ -71,6 +71,7 @@ module("OF - FirebaseListener", {
   setup: function() {
     Orbit.Promise = Promise;
     Orbit.all = all;
+    Orbit.allSettled = allSettled;
     Orbit.resolve = resolve;
 
     schema = new Schema(schemaDefinition);
@@ -85,6 +86,7 @@ module("OF - FirebaseListener", {
   },
 
   teardown: function() {
+    firebaseListener.unsubscribeAll();
     firebaseListener = firebaseClient = null;
   }
 });
@@ -102,7 +104,7 @@ test("receive add record operation", function(){
     start();
     equal(operation.op, 'add', "op matches");
     deepEqual(operation.path, ['planet', 'abc123'], "path matches");
-    deepEqual(schema.normalize('planet', operation.value), planet, "record matches");
+    deepEqual(operation.value.id, planet.id, "record matches");
   });
 });
 
@@ -225,4 +227,30 @@ test("receive remove from hasMany operation", function(){
     var removeFromHasManyOperation = new Operation({op: 'remove', path: 'planet/planet456/__rel/moons/moon123'});
     shouldIncludeOperation(removeFromHasManyOperation, receivedOperations);
   });
+});
+
+test("subscribe to hasMany link", function(){
+  stop();
+
+  var moon = schema.normalize('moon', {id: "moon123", name: "titan", planet: 'planet456'});
+  var planet = schema.normalize('planet', {id: "planet456", name: "jupiter", moons: {'moon123': true}});
+
+  all([
+    firebaseClient.set('moon/moon123', moon),
+    firebaseClient.set('planet/planet456', planet)
+  ])
+  .then(function(){
+    var receiveOperation = captureDidTransforms(firebaseListener, 7);
+
+    firebaseListener.subscribeToLink('planet', 'planet456', 'moons');
+
+    receiveOperation.then(function(receivedOperations){
+      start();
+
+      deepEqual(receivedOperations[5].serialize(), {op: 'replace', path: 'moon/moon123/__rel/planet', value: 'planet456'});
+      deepEqual(receivedOperations[6].serialize(), {op: 'add', path: 'planet/planet456/__rel/moons/moon123', value: true});
+    });
+
+  });
+
 });
