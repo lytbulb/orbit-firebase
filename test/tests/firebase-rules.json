@@ -1,0 +1,30 @@
+{
+    "rules": {
+      "star": {
+        "$starId": {
+          ".write": true,
+          ".read": true
+        }
+      },
+      "planet": {
+        ".write": true,
+        ".read": true
+      },
+      "moon": {
+        "$moonId": {
+          ".write": true,
+          ".read": "root.child('moon').child($moonId).child('restricted').val() !== true"
+        }
+      },
+      "race": {
+        "$raceId": {
+          ".write": true,
+          ".read": true
+        }
+      },
+      "operation": {
+        ".write": true,
+        ".read": true
+      }
+    }
+}
