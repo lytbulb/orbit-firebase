@@ -5,9 +5,9 @@ import FirebaseListener from 'orbit-firebase/firebase-listener';
 import FirebaseClient from 'orbit-firebase/firebase-client';
 import { uuid } from 'orbit/lib/uuid';
 import Orbit from 'orbit/main';
-import { captureDidTransform, captureDidTransforms, op } from 'tests/test-helper';
+import { captureDidTransform, captureDidTransforms, op, includesAll } from 'tests/test-helper';
 import { fop } from 'orbit-firebase/lib/operation-utils';
-import { Promise, all, resolve } from 'rsvp';
+import { Promise, all, allSettled, resolve } from 'rsvp';
 import { buildOptions } from 'orbit-firebase/subscriptions/options';
 import { prepareFirebaseClient } from 'tests/test-helper';
 
@@ -87,20 +87,6 @@ module("OF - FirebaseListener - subscriptions", {
     firebaseListener = firebaseClient = null;
   }
 });
-
-function arrayToHash(array, value){
-  var hash = {};
-
-  array.forEach(function(item){
-    hash[item] = value;
-  });
-
-  return hash;
-}
-
-function includesAll(a, b){
-  deepEqual(arrayToHash(a, true), arrayToHash(b, true));
-}
 
 test('subscribe to record', function(){
   stop();

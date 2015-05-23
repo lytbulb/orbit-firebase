@@ -4,6 +4,7 @@ import { fop } from 'orbit-firebase/lib/operation-utils';
 import { on } from 'rsvp';
 import Orbit from 'orbit/main';
 import FirebaseClient from 'orbit-firebase/firebase-client';
+import { arrayToHash } from 'orbit-firebase/lib/array-utils';
 
 on('error', function(reason){
   console.log(reason);
@@ -83,5 +84,9 @@ function prepareFirebaseClient(){
     });
 }
 
+function includesAll(a, b){
+  deepEqual(arrayToHash(a, true), arrayToHash(b, true));
+}
 
-export { nextEventPromise, op, captureDidTransform, captureDidTransforms, wait, prepareFirebaseClient };
+
+export { nextEventPromise, op, captureDidTransform, captureDidTransforms, wait, prepareFirebaseClient, includesAll };
