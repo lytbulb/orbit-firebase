@@ -43,7 +43,7 @@ module("OC - FirebaseSource", {
         moon: {
           attributes: {
             name: {type: 'string'},
-            isProtected: {type: 'boolean'}
+            restricted: {type: 'boolean'}
           },
           links: {
             planet: {type: 'hasOne', model: 'planet', inverse: 'moons'}
@@ -236,13 +236,16 @@ test("#find - can find all records", function() {
 test("#find - can 'include' relationships", function(){
   stop();
 
-  var jupiter = { id: 'planet1', name: "Jupiter", moons: { 'moon1': true } };
-  var europa = { id: 'moon1', name: 'Europa', planet: 'planet1' };
+  var jupiter = { id: 'planet1', name: "Jupiter" };
+  var europa = { id: 'moon1', name: 'Europa' };
 
   all([
     source.add('planet', jupiter),
     source.add('moon', europa)
   ])
+  .then(function(){
+    source.addLink('planet', 'planet1', 'moons', 'moon1');
+  })
   .then(function(){
     return source.find('planet', 'planet1', {include: ['moons']});
 
@@ -286,7 +289,7 @@ test("#addLink - can add to hasMany", function() {
   })
   .then(function(){
     start();
-    ok(fbSaturn.moons[titan.id], "firebase should have added  titan to saturn");
+    ok(fbSaturn.moons[titan.id], "firebase should have added titan to saturn");
     equal(source.retrieveLink('planet', saturn.id, 'moons'), titan.id, "cache should have added titan to saturn");
     stop();
 
@@ -424,7 +427,7 @@ test("#removeLink - can remove from a hasMany relationship", function() {
 // });
 
 test("#removeLink - can remove a hasOne relationship", function() {
-  expect(9);
+  expect(7);
   stop();
 
   var titan, saturn, fbTitan, fbSaturn;
@@ -446,13 +449,8 @@ test("#removeLink - can remove a hasOne relationship", function() {
     ]);
   })
   .then(function(){
-    start();
     ok(!fbTitan.planetId, "titan has left saturn's orbit");
-    ok(!fbSaturn.moonIds, "saturn is no longer orbitted by titan");
-
-    equal(source.retrieveLink('planet', saturn.id, 'moons').length, 0, "cache should have removed titan from saturn");
     ok(!source.retrieveLink('moon', titan.id, "planet"), "cache should have removed saturn from titan");
-    stop();
 
   }).then(function(){
     firebaseClient.valueAt('operation').then(function(operations){
@@ -521,7 +519,7 @@ test("#findLinked - can filter has-many linked records based on permissions", fu
   all([
     source.add('planet', {name: "Saturn"}).then(function(sourceSaturn){saturn = sourceSaturn;}),
     source.add('moon', {name: "Titan"}).then(function(sourceTitan){titan = sourceTitan;}),
-    source.add('moon', {name: "Rhea", isProtected: true}).then(function(sourceRhea){rhea = sourceRhea;})
+    source.add('moon', {name: "Rhea", restricted: true}).then(function(sourceRhea){rhea = sourceRhea;})
   ])
   .then(function(){
     return all([
