@@ -83,6 +83,7 @@ module("OF - FirebaseListener - subscriptions", {
   },
 
   teardown: function() {
+    firebaseListener.unsubscribeAll();
     firebaseListener = firebaseClient = null;
   }
 });

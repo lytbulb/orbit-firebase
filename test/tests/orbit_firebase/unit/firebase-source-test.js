@@ -63,6 +63,7 @@ module("OC - FirebaseSource", {
   },
 
   teardown: function() {
+    source.disconnect();
     schema = null;
     source = null;
 
