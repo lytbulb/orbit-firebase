@@ -33,7 +33,6 @@ var packages = [
               /orbit-firebase\/subscriptions\/has-one-subscription.js/,
               /orbit-firebase\/subscriptions\/has-many-subscription.js/,
               /orbit-firebase\/subscriptions\/options.js/,
-              /orbit-firebase\/eager-relationship-loader.js/,
               /orbit-firebase\/operation-decomposer.js/,
               /orbit-firebase\/operation-matcher.js/,
               /orbit-firebase\/transformers\/add-record.js/,
