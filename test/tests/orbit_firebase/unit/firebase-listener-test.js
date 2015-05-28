@@ -61,7 +61,11 @@ function shouldIncludeOperation(operation, operations){
   });
 
   if(!present){
-    console.log("operation not found in", operations);
+    console.group("operation", operation.toString(), "not found in...");
+    operations.forEach(function(operation){
+      console.log("*", operation.toString());
+    });
+    console.groupEnd();
   }
 
   ok(present, "operation was present: " + operation.path.join("/"));
