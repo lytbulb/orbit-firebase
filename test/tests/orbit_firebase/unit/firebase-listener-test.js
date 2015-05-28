@@ -170,17 +170,16 @@ test("receive replace hasOne operation", function(){
   var moon = schema.normalize('moon', {id: "moon123", name: "titan"});
   var planet = schema.normalize('planet', {id: "planet456", name: "jupiter"});
 
-  var receiveOperation = captureDidTransform(firebaseListener, 8);
+  var receiveOperations = captureDidTransforms(firebaseListener, 8);
 
   firebaseClient.set('moon/moon123', moon);
   firebaseClient.set('planet/planet456', planet);
   firebaseClient.set('moon/moon123/planet', planet.id);
 
-  receiveOperation.then(function(receivedOperation){
+
+  receiveOperations.then(function(receivedOperations){
     start();
-    equal(receivedOperation.op, 'replace', "op matches");
-    deepEqual(receivedOperation.path, ['moon', 'moon123', '__rel', 'planet'], "path matches");
-    equal(receivedOperation.value, "planet456", "link value matches");
+    shouldIncludeOperation(op('replace', 'moon/moon123/__rel/planet', 'planet456'), receivedOperations);
   });
 });
 
@@ -266,7 +265,7 @@ test("subscribe to hasMany link", function(){
       start();
 
       shouldIncludeOperation(op('add', 'planet/planet456/__rel/moons', {'moon123': true}), receivedOperations);
-      shouldIncludeOperation(op('replace', 'moon/moon123/__rel/planet', 'planet456'), receivedOperations);
+      shouldIncludeOperation(op('add', 'moon/moon123/__rel/planet', 'planet456'), receivedOperations);
       shouldIncludeOperation(op('add', 'planet/planet456/__rel/moons/moon123', true), receivedOperations);
     });
 
@@ -297,6 +296,58 @@ test("update hasMany subscription", function(){
   .then(function(receivedOperations){
       start();
       shouldNotIncludeOperation(op('add', 'planet/planet456/__rel/moons', {'moon123': true}), receivedOperations);
+  });
+
+});
+
+test("subscribe to hasOne link", function(){
+  stop();
+
+  var moon = schema.normalize('moon', {id: "moon123", name: "titan", planet: 'planet456'});
+  var planet = schema.normalize('planet', {id: "planet456", name: "jupiter", moons: {'moon123': true}});
+
+  all([
+    firebaseClient.set('moon/moon123', moon),
+    firebaseClient.set('planet/planet456', planet)
+  ])
+  .then(function(){
+    var receiveOperations = captureDidTransforms(firebaseListener, 8);
+
+    firebaseListener.subscribeToLink('moon', 'moon123', 'planet');
+
+    receiveOperations.then(function(receivedOperations){
+      start();
+
+      shouldIncludeOperation(op('add', 'moon/moon123/__rel/planet', 'planet456'), receivedOperations);
+    });
+
+  });
+
+});
+
+test("receive update to hasOne link", function(){
+  stop();
+
+  var titan = schema.normalize('moon', {id: "titan", name: "titan", planet: 'jupiter'});
+  var jupiter = schema.normalize('planet', {id: "jupiter", name: "Jupiter", moons: {'titan': true}});
+  var saturn = schema.normalize('planet', {id: "saturn", name: "Saturn", moons: {}});
+  var receiveOperations = captureDidTransforms(firebaseListener, 14);
+
+  all([
+    firebaseClient.set('moon/titan', titan),
+    firebaseClient.set('planet/jupiter', jupiter),
+    firebaseClient.set('planet/saturn', saturn)
+  ])
+  .then(function(){
+    return firebaseListener.subscribeToLink('moon', 'titan', 'planet');
+  })
+  .then(function(){
+    return firebaseClient.set('moon/titan/planet', 'saturn');
+  });
+
+  receiveOperations.then(function(receivedOperations){
+      start();
+      shouldIncludeOperation(op('replace', 'moon/titan/__rel/planet', 'saturn'), receivedOperations);
   });
 
 });
