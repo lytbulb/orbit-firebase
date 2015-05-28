@@ -1,5 +1,6 @@
 /* global Firebase */
 import Orbit from 'orbit/main';
+import OC from 'orbit-common/main';
 import Operation from 'orbit/operation';
 import { uuid } from 'orbit/lib/uuid';
 import Schema from 'orbit-common/schema';
@@ -184,6 +185,25 @@ test("add link - set hasOne", function(){
   firebaseTransformer.transform(op('add', 'moon/1', {name: "Titan"}))
   .then(function(){
     return firebaseTransformer.transform(op('add', 'moon/1/__rel/planet', planetId));
+
+  })
+  .then(function(){
+    firebaseClient.valueAt('moon/1/planet').then(function(firebasePlanetId){
+      start();
+      equal(firebasePlanetId, planetId);
+    });
+
+  });
+});
+
+test("add link - set hasOne to LINK_NOT_INITIALIZED", function(){
+  stop();
+
+  var planetId = 10;
+
+  firebaseTransformer.transform(op('add', 'moon/1', {name: "Titan", __rel: { planet: planetId }}))
+  .then(function(){
+    return firebaseTransformer.transform(op('add', 'moon/1/__rel/planet', OC.LINK_NOT_INITIALIZED));
 
   })
   .then(function(){
