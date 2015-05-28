@@ -5,7 +5,7 @@ import FirebaseListener from 'orbit-firebase/firebase-listener';
 import FirebaseClient from 'orbit-firebase/firebase-client';
 import { uuid } from 'orbit/lib/uuid';
 import Orbit from 'orbit/main';
-import { captureDidTransform, captureDidTransforms, op, prepareFirebaseClient } from 'tests/test-helper';
+import { captureDidTransform, captureDidTransforms, op, prepareFirebaseClient, operationsSink } from 'tests/test-helper';
 import { fop } from 'orbit-firebase/lib/operation-utils';
 import { Promise, all, allSettled, resolve } from 'rsvp';
 import { eq } from 'orbit/lib/eq';
@@ -270,6 +270,33 @@ test("subscribe to hasMany link", function(){
       shouldIncludeOperation(op('add', 'planet/planet456/__rel/moons/moon123', true), receivedOperations);
     });
 
+  });
+
+});
+
+test("update hasMany subscription", function(){
+  stop();
+
+  var moon = schema.normalize('moon', {id: "moon123", name: "titan", planet: 'planet456'});
+  var planet = schema.normalize('planet', {id: "planet456", name: "jupiter", moons: {'moon123': true}});
+
+  all([
+    firebaseClient.set('moon/moon123', moon),
+    firebaseClient.set('planet/planet456', planet)
+  ])
+  .then(function(){
+    var receiveOperations = captureDidTransforms(firebaseListener, 8);
+    firebaseListener.subscribeToLink('planet', 'planet456', 'moons');
+    return receiveOperations;
+  })
+  .then(function(){
+    var receivedOperations = operationsSink(firebaseListener);
+    firebaseListener.subscribeToLink('planet', 'planet456', 'moons', {include: ['planet']});
+    return receivedOperations;
+  })
+  .then(function(receivedOperations){
+      start();
+      shouldNotIncludeOperation(op('add', 'planet/planet456/__rel/moons', {'moon123': true}), receivedOperations);
   });
 
 });
