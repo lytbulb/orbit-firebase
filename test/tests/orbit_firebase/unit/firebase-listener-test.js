@@ -183,8 +183,7 @@ test("receive remove hasOne operation", function(){
   receiveOperations.then(function(receivedOperations){
 
     start();
-    var removeHasOneOperation = new Operation({op: 'remove', path: 'moon/moon123/__rel/planet'});
-    shouldIncludeOperation(removeHasOneOperation, receivedOperations);
+    shouldIncludeOperation(op('add', 'moon/moon123/__rel/planet', null), receivedOperations);
   });
 });
 
@@ -195,7 +194,7 @@ test("receive add to hasMany operation", function(){
   var moon = schema.normalize('moon', {id: "moon123", name: "titan"});
   var planet = schema.normalize('planet', {id: "planet456", name: "jupiter"});
 
-  var receiveOperations = captureDidTransforms(firebaseListener, 6);
+  var receiveOperations = captureDidTransforms(firebaseListener, 8);
 
   firebaseClient.set('moon/moon123', moon);
   firebaseClient.set('planet/planet456', planet);
@@ -203,8 +202,7 @@ test("receive add to hasMany operation", function(){
 
   receiveOperations.then(function(receivedOperations){
     start();
-    var addToHasManyOperation = new Operation({op: 'add', path: 'planet/planet456/__rel/moons/moon123', value: true});
-    shouldIncludeOperation(addToHasManyOperation, receivedOperations);
+    shouldIncludeOperation(op('add', 'planet/planet456/__rel/moons/moon123', true), receivedOperations);
   });
 });
 
@@ -215,7 +213,7 @@ test("receive remove from hasMany operation", function(){
   var moon = schema.normalize('moon', {id: "moon123", name: "titan"});
   var planet = schema.normalize('planet', {id: "planet456", name: "jupiter"});
 
-  var receiveOperations = captureDidTransforms(firebaseListener, 8);
+  var receiveOperations = captureDidTransforms(firebaseListener, 9);
 
   all([
     firebaseClient.set('moon/moon123', moon),
