@@ -88,5 +88,15 @@ function includesAll(a, b){
   deepEqual(arrayToHash(a, true), arrayToHash(b, true));
 }
 
+function operationsSink(source){
+  var operations = [];
 
-export { nextEventPromise, op, captureDidTransform, captureDidTransforms, wait, prepareFirebaseClient, includesAll };
+  source.on("didTransform", function(operation){
+    operations.push(operation);
+  });
+
+  return operations;
+}
+
+
+export { nextEventPromise, op, captureDidTransform, captureDidTransforms, wait, prepareFirebaseClient, includesAll, operationsSink };
