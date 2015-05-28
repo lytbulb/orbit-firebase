@@ -10,6 +10,7 @@ import FirebaseSerializer from 'orbit-firebase/firebase-serializer';
 import { Promise, all, hash, denodeify,resolve, on, defer } from 'rsvp';
 import { isArray } from 'orbit/lib/objects';
 import Cache from 'orbit-common/cache';
+import { arrayToHash } from 'orbit-firebase/lib/array-utils';
 
 import FirebaseClient from 'orbit-firebase/firebase-client';
 import FirebaseTransformer from 'orbit-firebase/firebase-transformer';
@@ -346,7 +347,7 @@ test("add link - add to hasMany", function(){
 test("replace link - set hasMany", function(){
   stop();
 
-  var moonIds = [1,2,3];
+  var moonIds = arrayToHash(['abc1','abc2','abc3'], true);
 
   firebaseTransformer.transform(op('add', 'moon/1', {name: "Titan"}))
   .then(function(){
