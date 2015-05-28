@@ -64,7 +64,7 @@ function shouldIncludeOperation(operation, operations){
     console.log("operation not found in", operations);
   }
 
-  ok(!present, "operation missing");
+  ok(present, "operation was present: " + operation.path.join("/"));
 }
 
 module("OF - FirebaseListener", {
@@ -247,8 +247,9 @@ test("subscribe to hasMany link", function(){
     receiveOperation.then(function(receivedOperations){
       start();
 
-      deepEqual(receivedOperations[7].serialize(), {op: 'replace', path: 'moon/moon123/__rel/planet', value: 'planet456'});
-      deepEqual(receivedOperations[8].serialize(), {op: 'add', path: 'planet/planet456/__rel/moons/moon123', value: true});
+      shouldIncludeOperation(op('add', 'planet/planet456/__rel/moons', {'moon123': true}), receivedOperations);
+      shouldIncludeOperation(op('replace', 'moon/moon123/__rel/planet', 'planet456'), receivedOperations);
+      shouldIncludeOperation(op('add', 'planet/planet456/__rel/moons/moon123', true), receivedOperations);
     });
 
   });
