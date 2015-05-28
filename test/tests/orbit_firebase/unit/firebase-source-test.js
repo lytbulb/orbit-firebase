@@ -71,7 +71,7 @@ module("OC - FirebaseSource", {
 });
 
 test("#add - can add record", function(){
-  expect(12);
+  expect(10);
   var planetDetails = {name: 'Jupiter', classification: 'gas giant'};
 
   stop();
@@ -101,14 +101,12 @@ test("#add - can add record", function(){
       equal(operation.path, 'planet/' + storedPlanet.id, "path included in operation");
       equal(operation.value.name, planetDetails.name, "name included in operation");
       equal(operation.value.classification, planetDetails.classification, "classification included in operation");
-      equal(operation.version, 0, "version included in operation");
-      ok(/active:\d+/.test(operation.jobStatus), "job status included in operation");
     }));
   });
 });
 
 test("#patch - can patch records", function() {
-  expect(8);
+  expect(6);
   stop();
   var _this = this;
 
@@ -138,15 +136,13 @@ test("#patch - can patch records", function() {
       equal(operation.path, 'planet/' + planet.id, "path included in operation");
       equal(operation.value.name, planetDetails.name, "name included in operation");
       equal(operation.value.classification, planetDetails.classification, "classification included in operation");
-      equal(operation.version, 0, "version included in operation");
-      ok(/active:\d+/.test(operation.jobStatus), "job status included in operation");
     });
 
   });
 });
 
 test("#remove - can delete records", function() {
-  expect(7);
+  expect(5);
   stop();
   var planetDetails = {name: 'Jupiter', classification: 'gas giant'};
   var planet;
@@ -172,9 +168,7 @@ test("#remove - can delete records", function() {
       var operation = operations[operationKey];
       equal(operation.op, 'remove', "op included in operation");
       equal(operation.path, 'planet/' + planet.id, "path included in operation");
-      equal(operation.version, 0, "version included in operation");
       ok(!operation.value, "operation does not include a value");
-      ok(/active:\d+/.test(operation.jobStatus), "job status included in operation");
     });
 
   });
@@ -271,7 +265,7 @@ test("#find - returns empty when no results for find all", function() {
 
 
 test("#addLink - can add to hasMany", function() {
-  expect(7);
+  expect(5);
   stop();
 
   var titan, saturn, fbTitan, fbSaturn;
@@ -300,18 +294,16 @@ test("#addLink - can add to hasMany", function() {
       var operationKey = Object.keys(operations)[2];
       var operation = operations[operationKey];
       equal(operation.op, 'add', "op included in operation");
-      equal(operation.version, 0, "version included in operation");
 
       equal(operation.path, 'planet/' + fbSaturn.id + '/__rel/moons/' + fbTitan.id);
       equal(operation.value, true, "operation included value");
-      ok(/active:\d+/.test(operation.jobStatus), "job status included in operation");
     });
 
   });
 });
 
 test('#addLink - can set hasOne link', function(){
-  expect(7);
+  expect(5);
   stop();
 
   var titan, saturn, fbTitan, fbSaturn;
@@ -341,18 +333,16 @@ test('#addLink - can set hasOne link', function(){
       var operationKey = Object.keys(operations)[2];
       var operation = operations[operationKey];
       equal(operation.op, 'replace', "op included in operation");
-      equal(operation.version, 0, "version included in operation");
 
       equal(operation.path, "moon/" + titan.id + "/__rel/planet");
       equal(operation.value, saturn.id, "operation included value");
-      ok(/active:\d+/.test(operation.jobStatus), "job status included in operation");
     });
 
   });
 });
 
 test("#removeLink - can remove from a hasMany relationship", function() {
-  expect(7);
+  expect(5);
   stop();
 
   var titan, saturn, fbTitan, fbSaturn;
@@ -385,11 +375,9 @@ test("#removeLink - can remove from a hasMany relationship", function() {
       var operationKey = Object.keys(operations)[2];
       var operation = operations[operationKey];
       equal(operation.op, 'add', "op included in operation");
-      equal(operation.version, 0, "version included in operation");
 
       equal(operation.path, "planet/" + fbSaturn.id + "/__rel/moons/" + fbTitan.id);
       equal(operation.value, true, "operation included value");
-      ok(/active:\d+/.test(operation.jobStatus), "job status included in operation");
     });
 
   });
@@ -428,7 +416,7 @@ test("#removeLink - can remove from a hasMany relationship", function() {
 // });
 
 test("#removeLink - can remove a hasOne relationship", function() {
-  expect(7);
+  expect(5);
   stop();
 
   var titan, saturn, fbTitan, fbSaturn;
@@ -462,8 +450,6 @@ test("#removeLink - can remove a hasOne relationship", function() {
 
       equal(operation.path, "moon/" + fbTitan.id + "/__rel/planet");
       equal(operation.value, fbSaturn.id, "operation included value");
-      equal(operation.version, 0, "version included in operation");
-      ok(/active:\d+/.test(operation.jobStatus), "job status included in operation");
     });
 
   });
