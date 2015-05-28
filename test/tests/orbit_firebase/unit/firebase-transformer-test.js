@@ -363,6 +363,25 @@ test("replace link - set hasMany", function(){
   });
 });
 
+test("replace link - set hasMany to LINK_NOT_INITIALIZED", function(){
+  stop();
+
+  var moonIds = arrayToHash(['abc1','abc2','abc3'], true);
+
+  firebaseTransformer.transform(op('add', 'planet/1', {name: "Jupiter", __rel: { moons: moonIds }}))
+  .then(function(){
+    return firebaseTransformer.transform(op('replace', 'planet/1/__rel/moons', OC.LINK_NOT_INITIALIZED));
+
+  })
+  .then(function(){
+    firebaseClient.valueAt('planet/1/moons').then(function(firebaseMoonIds){
+      start();
+      deepEqual(firebaseMoonIds, moonIds);
+    });
+
+  });
+});
+
 test("remove link - remove from a hasMany", function(){
   stop();
 
