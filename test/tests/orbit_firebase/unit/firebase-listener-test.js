@@ -240,7 +240,7 @@ test("subscribe to hasMany link", function(){
     firebaseClient.set('planet/planet456', planet)
   ])
   .then(function(){
-    var receiveOperation = captureDidTransforms(firebaseListener, 9);
+    var receiveOperation = captureDidTransforms(firebaseListener, 8);
 
     firebaseListener.subscribeToLink('planet', 'planet456', 'moons');
 
