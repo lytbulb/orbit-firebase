@@ -150,7 +150,7 @@ test("receive replace hasOne operation", function(){
   var moon = schema.normalize('moon', {id: "moon123", name: "titan"});
   var planet = schema.normalize('planet', {id: "planet456", name: "jupiter"});
 
-  var receiveOperation = captureDidTransform(firebaseListener, 7);
+  var receiveOperation = captureDidTransform(firebaseListener, 8);
 
   firebaseClient.set('moon/moon123', moon);
   firebaseClient.set('planet/planet456', planet);
