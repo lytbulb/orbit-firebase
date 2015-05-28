@@ -71,6 +71,22 @@ function shouldIncludeOperation(operation, operations){
   ok(present, "operation was present: " + operation.path.join("/"));
 }
 
+function shouldNotIncludeOperation(operation, operations){
+  var present = any(operations, function(candidate){
+    return eq(candidate.serialize(), operation.serialize());
+  });
+
+  if(present){
+    console.group("operation", operation.toString(), "found in...");
+    operations.forEach(function(operation){
+      console.log("*", operation.toString());
+    });
+    console.groupEnd();
+  }
+
+  ok(!present, "operation wasn't present: " + operation.path.join("/"));
+}
+
 module("OF - FirebaseListener", {
   setup: function() {
     Orbit.Promise = Promise;
