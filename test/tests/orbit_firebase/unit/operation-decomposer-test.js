@@ -101,8 +101,6 @@ module('OC - Firebase - Operation decomposer', {
 
     human = buildRace({id: '30', name: 'Human'});
     martian = buildRace({id: '31', name: 'Martian'});
-    
-    console.log('finished setup');
   },
 
   teardown: function() {
@@ -121,12 +119,12 @@ function stringifyOperations(operations){
 
 function operationsShouldMatch(actualOperations, expectedOperations){
   console.log(JSON.stringify({
-    actual: stringifyOperations(actualOperations), 
+    actual: stringifyOperations(actualOperations),
     expected: stringifyOperations(expectedOperations)
   }, null, 2));
 
   equal(actualOperations.length, expectedOperations.length, 'Same number of operations');
-  
+
   for(var i = 0; i < actualOperations.length; i++){
     var actual = actualOperations[i];
     var expected = expectedOperations[i];
@@ -171,7 +169,7 @@ test('add to hasOne => hasMany', function(){
       op('remove', ['planet', jupiter.id, '__rel', 'moons', europa.id]),
       op('add', ['planet', saturn.id, '__rel', 'moons', europa.id], true)
     ]
-  );  
+  );
 });
 
 test('replace hasOne => hasMany', function(){
@@ -194,12 +192,12 @@ test('replace hasOne => hasMany', function(){
       op('remove', ['planet', jupiter.id, '__rel', 'moons', europa.id]),
       op('add', ['planet', saturn.id, '__rel', 'moons', europa.id], true)
     ]
-  );  
+  );
 });
 
 test('replace hasMany => hasOne with empty array', function(){
   cache.transform(op('add', ['planet', saturn.id], saturn));
-  cache.transform(op('add', ['moon', titan.id], titan));  
+  cache.transform(op('add', ['moon', titan.id], titan));
 
   associateMoonWithPlanet(titan, saturn);
 
@@ -211,12 +209,12 @@ test('replace hasMany => hasOne with empty array', function(){
       op('replace', ['planet', saturn.id, '__rel', 'moons'], {}),
       op('remove', ['moon', titan.id, '__rel', 'planet'])
     ]
-  );  
+  );
 });
 
 test('replace hasMany => hasOne with populated array', function(){
   cache.transform(op('add', ['planet', saturn.id], saturn));
-  cache.transform(op('add', ['moon', titan.id], titan));  
+  cache.transform(op('add', ['moon', titan.id], titan));
   cache.transform(op('add', ['planet', jupiter.id], jupiter));
 
   associateMoonWithPlanet(titan, saturn);
@@ -248,12 +246,12 @@ test('replace hasMany => hasMany', function(){
     [
       op('replace', ['planet', earth.id, '__rel', 'races'], {})
     ]
-  );  
+  );
 });
 
 test('remove hasOne => hasMany', function(){
   cache.transform(op('add', 'planet/10', saturn));
-  cache.transform(op('add', 'moon/20', titan));  
+  cache.transform(op('add', 'moon/20', titan));
   cache.transform(op('add', 'planet/11', jupiter));
   cache.transform(op('add', 'moon/21', europa));
 
@@ -268,12 +266,12 @@ test('remove hasOne => hasMany', function(){
       op('remove', ['moon', europa.id, '__rel', 'planet']),
       op('remove', ['planet', jupiter.id, '__rel', 'moons', europa.id])
     ]
-  );  
+  );
 });
 
 test('remove hasMany => hasOne', function(){
   cache.transform(op('add', 'planet/10', saturn));
-  cache.transform(op('add', 'moon/20', titan));  
+  cache.transform(op('add', 'moon/20', titan));
   cache.transform(op('add', 'planet/11', jupiter));
   cache.transform(op('add', 'moon/21', europa));
 
@@ -288,7 +286,7 @@ test('remove hasMany => hasOne', function(){
       op('remove', ['planet', jupiter.id, '__rel', 'moons', europa.id]),
       op('remove', ['moon', europa.id, '__rel', 'planet'])
     ]
-  );  
+  );
 });
 
 test('add to hasOne => hasOne', function(){
@@ -307,7 +305,7 @@ test('add to hasOne => hasOne', function(){
       op('add', ['planet', earth.id, '__rel', 'next'], saturn.id),
       op('add', ['planet', saturn.id, '__rel', 'previous'], earth.id)
     ]
-  );  
+  );
 });
 
 test('add to hasOne => hasOne with existing value', function(){
@@ -327,7 +325,7 @@ test('add to hasOne => hasOne with existing value', function(){
       op('add', ['planet', jupiter.id, '__rel', 'previous'], earth.id),
       op('remove', ['planet', saturn.id, '__rel', 'next'])
     ]
-  );  
+  );
 });
 
 test('replace hasOne => hasOne with existing value', function(){
@@ -347,7 +345,7 @@ test('replace hasOne => hasOne with existing value', function(){
       op('add', ['planet', jupiter.id, '__rel', 'previous'], earth.id),
       op('remove', ['planet', saturn.id, '__rel', 'next'])
     ]
-  );  
+  );
 });
 
 test('replace hasOne => hasOne with existing value', function(){
@@ -367,7 +365,7 @@ test('replace hasOne => hasOne with existing value', function(){
       op('add', ['planet', jupiter.id, '__rel', 'previous'], earth.id),
       op('remove', ['planet', saturn.id, '__rel', 'next'])
     ]
-  );  
+  );
 });
 
 test('add to hasMany => hasMany', function(){
@@ -382,7 +380,7 @@ test('add to hasMany => hasMany', function(){
       op('add', ['race', human.id, '__rel', 'planets', earth.id], true),
       op('add', ['planet', earth.id, '__rel','races', human.id], true)
     ]
-  );  
+  );
 });
 
 test('remove from hasMany => hasMany', function(){
@@ -399,5 +397,5 @@ test('remove from hasMany => hasMany', function(){
       op('remove', ['race', human.id, '__rel', 'planets', earth.id]),
       op('remove', ['planet', earth.id, '__rel','races', human.id])
     ]
-  );  
+  );
 });
