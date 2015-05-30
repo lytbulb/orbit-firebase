@@ -87,12 +87,25 @@ function operationsEqual(actual, expected){
 
     deepEqual(actualOp, expectedOp);
   }
-};
+}
 
 test("buildTransformation - doesn't apply addToHasMany operation if record doesn't exist", function(){
   cache.reset({});
 
   var operations = firebaseConnector.buildTransformation(op('add', 'planet/planet1/__rel/moons/moon1', true));
+  deepEqual(operations, [], 'no operations were included in the transformation');
+});
+
+test("buildTransformation - doesn't apply addToHasMany operation if already present in hasMany", function(){
+  var jupiter = { id: 'jupiter', name: "Jupiter", __rel: { moons: {'europa': true} }};
+
+  cache.reset({
+    planet: {
+      jupiter: jupiter
+    }
+  });
+
+  var operations = firebaseConnector.buildTransformation(op('add', 'planet/jupiter/__rel/moons/europa', true));
   deepEqual(operations, [], 'no operations were included in the transformation');
 });
 
