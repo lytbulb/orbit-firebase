@@ -106,5 +106,6 @@ test("deserialize - doesn't initialize links", function(){
 
   var deserialized = firebaseSerializer.deserialize('planet', serializedJupiter.id, serializedJupiter);
 
-  equal(deserialized.moons, undefined, "Moons are undefined");
+  equal(deserialized.__rel.moons, OC.LINK_NOT_INITIALIZED, "HasMany not initialized");
+  equal(deserialized.__rel.next, OC.LINK_NOT_INITIALIZED, "HasOne not initialized");
 });
