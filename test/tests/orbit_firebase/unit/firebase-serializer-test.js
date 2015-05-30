@@ -3,6 +3,7 @@ import { uuid } from 'orbit/lib/uuid';
 import Schema from 'orbit-common/schema';
 import { Promise } from 'rsvp';
 import Orbit from 'orbit/main';
+import OC from 'orbit-common/main';
 
 var schemaDefinition = {
   modelDefaults: {
@@ -70,6 +71,18 @@ test("serialize - serializes null dates", function(){
   var serialized = firebaseSerializer.serialize('planet', jupiter);
 
   ok(!serialized.birthDate, 'null birthDate was serialized');
+});
+
+test("serialize - throw exception if any links are unitialized", function(){
+  var jupiter = schema.normalize('planet', { id: 'p1', name: "Jupiter", __rel: { moons: OC.LINK_NOT_INITIALIZED } });
+
+  try {
+    firebaseSerializer.serialize('planet', jupiter);
+    ok(false, 'should have thrown exception');
+  }
+  catch(exception){
+    ok(true, 'exception was thrown');
+  }
 });
 
 test("deserialize - deserializes dates", function(){
