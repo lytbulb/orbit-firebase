@@ -38,6 +38,7 @@ function captureDidTransforms(source, count, options){
     var operations = [];
 
     var timeout = setTimeout(function(){
+      start();
       reject("Failed to receive " + count + " operations (received " + operations.length + ")");
     }, 1500);
 
