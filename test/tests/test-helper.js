@@ -5,6 +5,8 @@ import { on } from 'rsvp';
 import Orbit from 'orbit/main';
 import FirebaseClient from 'orbit-firebase/firebase-client';
 import { arrayToHash } from 'orbit-firebase/lib/array-utils';
+import { any } from 'orbit-firebase/lib/array-utils';
+import { eq } from 'orbit/lib/eq';
 
 on('error', function(reason){
   console.log(reason);
@@ -106,5 +108,37 @@ function operationsSink(source){
   return operations;
 }
 
+function shouldIncludeOperation(operation, operations){
+  var present = any(operations, function(candidate){
+    return eq(candidate.serialize(), operation.serialize());
+  });
 
-export { nextEventPromise, op, captureDidTransform, captureDidTransforms, wait, prepareFirebaseClient, includesAll, operationsSink };
+  if(!present){
+    console.group("operation", operation.toString(), "not found in...");
+    operations.forEach(function(operation){
+      console.log("*", operation.toString());
+    });
+    console.groupEnd();
+  }
+
+  ok(present, "operation was present: " + operation.path.join("/"));
+}
+
+function shouldNotIncludeOperation(operation, operations){
+  var present = any(operations, function(candidate){
+    return eq(candidate.serialize(), operation.serialize());
+  });
+
+  if(present){
+    console.group("operation", operation.toString(), "found in...");
+    operations.forEach(function(operation){
+      console.log("*", operation.toString());
+    });
+    console.groupEnd();
+  }
+
+  ok(!present, "operation wasn't present: " + operation.path.join("/"));
+}
+
+
+export { nextEventPromise, op, captureDidTransform, captureDidTransforms, wait, prepareFirebaseClient, includesAll, operationsSink, shouldIncludeOperation, shouldNotIncludeOperation };

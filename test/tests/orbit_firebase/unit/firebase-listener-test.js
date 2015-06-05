@@ -5,11 +5,9 @@ import FirebaseListener from 'orbit-firebase/firebase-listener';
 import FirebaseClient from 'orbit-firebase/firebase-client';
 import { uuid } from 'orbit/lib/uuid';
 import Orbit from 'orbit/main';
-import { captureDidTransform, captureDidTransforms, op, prepareFirebaseClient, operationsSink } from 'tests/test-helper';
+import { captureDidTransform, captureDidTransforms, op, prepareFirebaseClient, operationsSink, shouldIncludeOperation, shouldNotIncludeOperation } from 'tests/test-helper';
 import { fop } from 'orbit-firebase/lib/operation-utils';
 import { Promise, all, allSettled, resolve } from 'rsvp';
-import { eq } from 'orbit/lib/eq';
-import { any } from 'orbit-firebase/lib/array-utils';
 import Operation from 'orbit/operation';
 
 var schemaDefinition = {
@@ -54,38 +52,6 @@ var firebaseClient,
     firebaseListener,
     schema,
     cache;
-
-function shouldIncludeOperation(operation, operations){
-  var present = any(operations, function(candidate){
-    return eq(candidate.serialize(), operation.serialize());
-  });
-
-  if(!present){
-    console.group("operation", operation.toString(), "not found in...");
-    operations.forEach(function(operation){
-      console.log("*", operation.toString());
-    });
-    console.groupEnd();
-  }
-
-  ok(present, "operation was present: " + operation.path.join("/"));
-}
-
-function shouldNotIncludeOperation(operation, operations){
-  var present = any(operations, function(candidate){
-    return eq(candidate.serialize(), operation.serialize());
-  });
-
-  if(present){
-    console.group("operation", operation.toString(), "found in...");
-    operations.forEach(function(operation){
-      console.log("*", operation.toString());
-    });
-    console.groupEnd();
-  }
-
-  ok(!present, "operation wasn't present: " + operation.path.join("/"));
-}
 
 module("OF - FirebaseListener", {
   setup: function() {
