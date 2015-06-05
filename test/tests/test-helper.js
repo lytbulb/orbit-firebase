@@ -39,7 +39,7 @@ function captureDidTransforms(source, count, options){
 
     var timeout = setTimeout(function(){
       for(var i = 0; i < operations.length; i++){
-        console.log("operation " + i + ": ", fop(operations[i]));
+        console.log("operation " + (i + 1) + ": ", fop(operations[i]));
       }
       start();
       reject("Failed to receive " + count + " operations (received " + operations.length + ")");
