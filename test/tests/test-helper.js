@@ -1,6 +1,6 @@
 /* global clearTimeout, Firebase */
 import Operation from 'orbit/operation';
-import { fop } from 'orbit-firebase/lib/operation-utils';
+import { fop, operationToString } from 'orbit-firebase/lib/operation-utils';
 import { on } from 'rsvp';
 import Orbit from 'orbit/main';
 import FirebaseClient from 'orbit-firebase/firebase-client';
@@ -114,14 +114,14 @@ function shouldIncludeOperation(operation, operations){
   });
 
   if(!present){
-    console.group("operation", operation.toString(), "not found in...");
+    console.group("operation", operationToString(operation), "not found in...");
     operations.forEach(function(operation){
-      console.log("*", operation.toString());
+      console.log(operation.serialize());
     });
     console.groupEnd();
   }
 
-  ok(present, "operation was present: " + operation.path.join("/"));
+  ok(present, "operation was present: " + operationToString(operation));
 }
 
 function shouldNotIncludeOperation(operation, operations){
@@ -130,14 +130,14 @@ function shouldNotIncludeOperation(operation, operations){
   });
 
   if(present){
-    console.group("operation", operation.toString(), "found in...");
+    console.group("operation", operationToString(operation), "found in...");
     operations.forEach(function(operation){
-      console.log("*", operation.toString());
+      console.log(operation.serialize());
     });
     console.groupEnd();
   }
 
-  ok(!present, "operation wasn't present: " + operation.path.join("/"));
+  ok(!present, "operation wasn't present: " + operationToString(operation));
 }
 
 
