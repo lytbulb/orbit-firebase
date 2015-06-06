@@ -18,6 +18,7 @@ var packages = [
               /orbit-firebase\/lib\/object-utils.js/,
               /orbit-firebase\/lib\/operation-utils.js/,
               /orbit-firebase\/lib\/schema-utils.js/,
+              /orbit-firebase\/mixins\/invocations-tracker.js/,
               /orbit-firebase\/cache-source.js/,
               /orbit-firebase\/operation-sequencer.js/,
               /orbit-firebase\/firebase-client.js/,
