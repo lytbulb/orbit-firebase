@@ -83,8 +83,11 @@ module("OF - FirebaseListener - subscriptions", {
   },
 
   teardown: function() {
-    firebaseListener.unsubscribeAll();
-    firebaseListener = firebaseClient = null;
+    stop();
+    firebaseListener.unsubscribeAll().then(function(){
+      firebaseListener = firebaseClient = null;
+      start();
+    });
   }
 });
 
@@ -117,8 +120,8 @@ test('subscribe to record including a hasOne', function(){
 
   ])
   .then(function(){
-    firebaseListener.subscribeToRecord('moon', 'moon1', buildOptions({include: ['planet']}))
-    .then(function(){
+    firebaseListener.subscribeToRecord('moon', 'moon1', buildOptions({include: ['planet']}));
+    firebaseListener.then(function(){
       start();
 
       includesAll(firebaseListener.subscriptions(), [
@@ -147,7 +150,8 @@ test('subscribe to record including a hasMany', function(){
 
   ])
   .then(function(){
-    return firebaseListener.subscribeToRecord('planet', 'planet1', buildOptions({include: ['moons']}));
+    firebaseListener.subscribeToRecord('planet', 'planet1', buildOptions({include: ['moons']}));
+    return firebaseListener;
 
   })
   .then(function(){
@@ -169,6 +173,7 @@ test('subscribe to record including a hasMany', function(){
 });
 
 test('subscribe to record including a hasMany with some restricted members', function(){
+  expect(1);
   stop();
   var jupiter = { id: 'planet1', name: 'Jupiter', moons: { 'moon1': true, 'moon2': true } };
   var europa = { id: 'moon1', name: 'Europa', planet: 'planet1' };
@@ -181,15 +186,15 @@ test('subscribe to record including a hasMany with some restricted members', fun
 
   ])
   .then(function(){
-    return firebaseListener.subscribeToRecord('planet', 'planet1', buildOptions({include: ['moons']}));
+    firebaseListener.subscribeToRecord('planet', 'planet1', buildOptions({include: ['moons']}));
+    window.firebaseListener = firebaseListener;
+    return firebaseListener;
 
   })
   .then(function(){
     start();
 
     equal(firebaseListener.findSubscription('moon/moon2').status, 'permission_denied', 'access denied to record moon/moon2');
-    equal(firebaseListener.findSubscription('moon/moon2/name').status, 'permission_denied', 'access denied to attribute moon/moon2/name');
-    equal(firebaseListener.findSubscription('moon/moon2/restricted').status, 'permission_denied', 'access denied to attribute moon/moon2/restricted');
 
   });
 });
@@ -199,7 +204,7 @@ test("subscribe to a record when it's added to a hasMany", function(){
   var jupiter = { id: 'planet1', name: 'Jupiter' };
   var europa = { id: 'moon1', name: 'Europa' };
 
-  var capture = captureDidTransforms(firebaseListener, 5);
+  var capture = captureDidTransforms(firebaseListener, 6);
 
   all([
     firebaseClient.set('planet/planet1', jupiter),
@@ -207,7 +212,8 @@ test("subscribe to a record when it's added to a hasMany", function(){
 
   ])
   .then(function(){
-    return firebaseListener.subscribeToRecord('planet', 'planet1', buildOptions({include: ['moons']}));
+    firebaseListener.subscribeToRecord('planet', 'planet1', buildOptions({include: ['moons']}));
+    return firebaseListener;
 
   })
   .then(function(){
@@ -242,12 +248,13 @@ test("subscribe to a record when it's hasOne is replaced", function(){
 
   ])
   .then(function(){
-    return firebaseListener.subscribeToRecord('moon', 'moon1', buildOptions({include: ['planet']}));
+    firebaseListener.subscribeToRecord('moon', 'moon1', buildOptions({include: ['planet']}));
+    return firebaseListener;
 
   })
   .then(function(){
-    return firebaseClient.set('moon/moon1/planet', 'planet1');
-
+    firebaseClient.set('moon/moon1/planet', 'planet1');
+    return firebaseListener;
   })
   .then(function(){
     start();
@@ -277,11 +284,14 @@ test("subscribe to initial nested hasOne records", function(){
 
   ])
   .then(function(){
-    return firebaseListener.subscribeToRecord('moon', 'moon1', buildOptions({include: ['planet.star']}));
+    firebaseListener.subscribeToRecord('moon', 'moon1', buildOptions({include: ['planet.star']}));
+
+    return firebaseListener;
 
   })
   .then(function(){
     start();
+
     includesAll(firebaseListener.subscriptions(), [
       "moon/moon1/name",
       "moon/moon1/planet",
@@ -314,7 +324,8 @@ test("subscribe to initial nested hasMany records", function(){
 
   ])
   .then(function(){
-    return firebaseListener.subscribeToRecord('star', 'star1', buildOptions({include: ['planets.moons']}));
+    firebaseListener.subscribeToRecord('star', 'star1', buildOptions({include: ['planets.moons']}));
+    return firebaseListener;
 
   })
   .then(function(){
@@ -353,7 +364,8 @@ test("subscribe to initial nested hasMany records with restrictions", function()
 
   ])
   .then(function(){
-    return firebaseListener.subscribeToRecord('star', 'star1', buildOptions({include: ['planets.moons']}));
+    firebaseListener.subscribeToRecord('star', 'star1', buildOptions({include: ['planets.moons']}));
+    return firebaseListener;
 
   })
   .then(function(){
@@ -364,9 +376,6 @@ test("subscribe to initial nested hasMany records with restrictions", function()
       "moon/moon1/restricted",
       "moon/moon1/planet",
       "moon/moon2",
-      "moon/moon2/name",
-      "moon/moon2/restricted",
-      "moon/moon2/planet",
       "planet/planet1/classification",
       "planet/planet1/moons",
       "planet/planet1/name",
@@ -379,8 +388,6 @@ test("subscribe to initial nested hasMany records with restrictions", function()
     ]);
 
     equal(firebaseListener.findSubscription('moon/moon2').status, 'permission_denied', 'access denied to record moon/moon2');
-    equal(firebaseListener.findSubscription('moon/moon2/name').status, 'permission_denied', 'access denied to attribute moon/moon2/name');
-    equal(firebaseListener.findSubscription('moon/moon2/restricted').status, 'permission_denied', 'access denied to attribute moon/moon2/restricted');
   });
 });
 
@@ -397,12 +404,13 @@ test("subscribe to added nested hasMany records", function(){
 
   ])
   .then(function(){
-    return firebaseListener.subscribeToRecord('star', 'star1', buildOptions({include: ['planets']}));
+    firebaseListener.subscribeToRecord('star', 'star1', buildOptions({include: ['planets']}));
+    return firebaseListener;
 
   })
   .then(function(){
-    return firebaseListener.subscribeToRecord('star', 'star1', buildOptions({include: ['planets.moons']}));
-
+    firebaseListener.subscribeToRecord('star', 'star1', buildOptions({include: ['planets.moons']}));
+    return firebaseListener;
   })
   .then(function(){
     start();
@@ -439,11 +447,13 @@ test("subscribe to added nested hasOne records", function(){
 
   ])
   .then(function(){
-    return firebaseListener.subscribeToRecord('moon', 'moon1', buildOptions({include: ['planet']}));
+    firebaseListener.subscribeToRecord('moon', 'moon1', buildOptions({include: ['planet']}));
+    return firebaseListener;
 
   })
   .then(function(){
-    return firebaseListener.subscribeToRecord('moon', 'moon1', buildOptions({include: ['planet.star']}));
+    firebaseListener.subscribeToRecord('moon', 'moon1', buildOptions({include: ['planet.star']}));
+    return firebaseListener;
 
   }).then(function(){
     start();
@@ -479,17 +489,29 @@ test("subscribe to link", function(){
 
   ])
   .then(function(){
-    firebaseListener.subscribeToLink('planet', 'planet1', 'moons').then(function(){
-      start();
+    firebaseListener.subscribeToLink('planet', 'planet1', 'moons');
+    return firebaseListener;
+  })
+  .then(function(){
+    start();
 
-      includesAll(firebaseListener.subscriptions(), [
-        "moon/moon1",
-        "moon/moon1/name",
-        "moon/moon1/restricted",
-        "planet/planet1/moons"
-      ]);
-    });
+    console.group("subscriptions statii");
+    for(var key in firebaseListener._subscriptions){
+      var subscription = firebaseListener._subscriptions[key];
+      console.log(key, subscription.status);
+    }
+    console.groupEnd();
 
+    includesAll(firebaseListener.subscriptions(), [
+      "moon/moon1",
+      "moon/moon1/name",
+      "moon/moon1/planet",
+      "moon/moon1/restricted",
+      "planet/planet1",
+      "planet/planet1/classification",
+      "planet/planet1/moons",
+      "planet/planet1/name"
+    ]);
   });
 
 });
