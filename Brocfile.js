@@ -16,6 +16,7 @@ var packages = [
     include: [/orbit-firebase\/lib\/cache-utils.js/,
               /orbit-firebase\/lib\/array-utils.js/,
               /orbit-firebase\/lib\/object-utils.js/,
+              /orbit-firebase\/lib\/promise-utils.js/,
               /orbit-firebase\/lib\/operation-utils.js/,
               /orbit-firebase\/lib\/schema-utils.js/,
               /orbit-firebase\/mixins\/invocations-tracker.js/,
