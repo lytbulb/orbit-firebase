@@ -130,7 +130,6 @@ test('subscribe to record including a hasOne', function(){
         'planet/planet1',
         'planet/planet1/name',
         'planet/planet1/classification',
-        'planet/planet1/moons',
         'moon/moon1/planet',
         'moon/moon1/restricted'
       ]);
@@ -227,7 +226,6 @@ test("subscribe to a record when it's added to a hasMany", function(){
       'moon/moon1/name',
       'moon/moon1',
       'moon/moon1/restricted',
-      'moon/moon1/planet',
       'planet/planet1/classification',
       'planet/planet1/moons',
       'planet/planet1/moons',
@@ -265,8 +263,7 @@ test("subscribe to a record when it's hasOne is replaced", function(){
       'moon/moon1/restricted',
       "planet/planet1/classification",
       "planet/planet1/name",
-      "planet/planet1",
-      "planet/planet1/moons"
+      "planet/planet1"
     ]);
   });
 });
@@ -298,13 +295,11 @@ test("subscribe to initial nested hasOne records", function(){
       "moon/moon1",
       "moon/moon1/restricted",
       "planet/planet1/classification",
-      "planet/planet1/moons",
       "planet/planet1/name",
       "planet/planet1/star",
       "planet/planet1",
       "star/star1/name",
-      "star/star1",
-      "star/star1/planets"
+      "star/star1"
     ]);
 
   });
@@ -465,11 +460,9 @@ test("subscribe to added nested hasOne records", function(){
       "planet/planet1/classification",
       "planet/planet1/name",
       "planet/planet1/star",
-      "planet/planet1/moons",
       "planet/planet1",
       "star/star1/name",
-      "star/star1",
-      "star/star1/planets"
+      "star/star1"
     ]);
 
   });

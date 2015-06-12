@@ -147,7 +147,7 @@ test("receive replace hasOne operation", function(){
 
   }).then(function(){
 
-    var receiveOperations = captureDidTransforms(firebaseListener, 6);
+    var receiveOperations = captureDidTransforms(firebaseListener, 5);
 
     firebaseClient.set('moon/moon123/planet', planet.id);
 
@@ -283,7 +283,7 @@ test("subscribe to hasOne link", function(){
     firebaseClient.set('planet/planet456', planet)
   ])
   .then(function(){
-    var receiveOperations = captureDidTransforms(firebaseListener, 8);
+    var receiveOperations = captureDidTransforms(firebaseListener, 4);
 
     firebaseListener.subscribeToLink('moon', 'moon123', 'planet');
 
@@ -303,7 +303,7 @@ test("receive update to hasOne link", function(){
   var titan = schema.normalize('moon', {id: "titan", name: "titan", planet: 'jupiter'});
   var jupiter = schema.normalize('planet', {id: "jupiter", name: "Jupiter", moons: {'titan': true}});
   var saturn = schema.normalize('planet', {id: "saturn", name: "Saturn", moons: {}});
-  var receiveOperations = captureDidTransforms(firebaseListener, 13);
+  var receiveOperations = captureDidTransforms(firebaseListener, 8);
 
   all([
     firebaseClient.set('moon/titan', titan),

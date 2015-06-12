@@ -8,11 +8,14 @@ import { Promise, all, allSettled, hash, denodeify,resolve, on, defer, map } fro
 import { isArray, clone } from 'orbit/lib/objects';
 import { spread } from 'orbit/lib/functions';
 import { nextEventPromise, captureDidTransforms, wait, prepareFirebaseClient } from 'tests/test-helper';
+import OperationEncoder from 'orbit-common/operation-encoder';
+import { asHash } from 'orbit-firebase/lib/object-utils';
 
 var schema,
     source,
     firebaseRef,
-    firebaseClient;
+    firebaseClient,
+    operationEncoder;
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -53,6 +56,9 @@ module("OC - FirebaseSource", {
     });
 
     stop();
+
+    operationEncoder = new OperationEncoder(schema);
+
     prepareFirebaseClient().then(function(preparedFirebaseClient){
       firebaseClient = preparedFirebaseClient;
       firebaseRef = firebaseClient.firebaseRef;
@@ -338,6 +344,60 @@ test('#addLink - can set hasOne link', function(){
       equal(operation.value, saturn.id, "operation included value");
     });
 
+  });
+});
+
+test('#transform - ignores set hasOne link to OC.LINK_NOT_INITIALIZED', function(){
+  expect(1);
+  stop();
+
+  var titan;
+  var saturn;
+
+  all([
+    source.add('planet', {name: "Saturn"}).then(function(addedSaturn){ saturn = addedSaturn; }),
+    source.add('moon', {name: "Titan"}).then(function(addedTitan){ titan = addedTitan; })
+  ])
+  .then(function(){
+    return source.transform(operationEncoder.replaceLinkOp('moon', titan.id, 'planet', saturn.id));
+  })
+  .then(function(){
+    return source.transform(operationEncoder.replaceLinkOp('moon', titan.id, 'planet', undefined));
+
+  })
+  .then(function(){
+    return firebaseClient.valueAt('moon/' + titan.id);
+
+  }).then(function(titanAfter){
+    start();
+    equal(titanAfter.planet, saturn.id, "titan's planet has not been updated");
+  });
+});
+
+test('#transform - ignores set hasMany link to OC.LINK_NOT_INITIALIZED', function(){
+  expect(1);
+  stop();
+
+  var titan;
+  var saturn;
+
+  all([
+    source.add('planet', {name: "Saturn"}).then(function(addedSaturn){ saturn = addedSaturn; }),
+    source.add('moon', {name: "Titan"}).then(function(addedTitan){ titan = addedTitan; })
+  ])
+  .then(function(){
+    return source.transform(operationEncoder.addLinkOp('planet', saturn.id, 'moons', titan.id));
+  })
+  .then(function(){
+    return source.transform(operationEncoder.replaceLinkOp('planet', saturn.id, 'moons', undefined));
+
+  })
+  .then(function(){
+    return firebaseClient.valueAt('planet/' + saturn.id);
+
+  }).then(function(saturnAfter){
+    start();
+    deepEqual(saturnAfter.moons, asHash(titan.id, true), "titan's planet has not been updated");
   });
 });
 

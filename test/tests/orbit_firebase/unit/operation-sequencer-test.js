@@ -62,10 +62,7 @@ test("emits dependent add to hasMany link operation after add records", function
   ok(!cache.retrieve(addLinkOperation.path), 'link not added yet');
 
   operationSequencer.process(addTaskBoardOperation);
-  ok(!cache.retrieve(addLinkOperation.path), 'link not added yet');
-
-  operationSequencer.process(initializeTaskBoardsOperation);
-  ok(cache.retrieve(addLinkOperation.path), 'link added both records have been added and link initialized');
+  ok(cache.retrieve(addLinkOperation.path), 'link added - both records have been added');
 });
 
 test("emits operations in same sequence if they arrive in correct order", function(){
@@ -89,18 +86,3 @@ test("never emits attribute operations that arrive before record has been added"
 
   equal(cache.retrieve(addTaskBoardOperation.path).name, "Development", "replace attribute operation wasn't applied");
 });
-
-test("holds up hasMany link modifications until link has been initialized", function(){
-  var addTaskBoardOperation = op('add', 'task-board/task-board1', {id: 'task-board1', name: 'Development', __rel: {projectBoard: null}});
-  var addProjectBoardOperation = op('add', 'project-board/project-board1', {id: 'project-board1', name: 'KBR', __rel: {taskBoards: {}}});
-  var addLinkOperation = op('add', 'project-board/project-board1/__rel/taskBoards/task-board1', true);
-  var initializehasManyOperation = op('replace', 'project-board/project-board1/__rel/taskBoards', {});
-
-  operationSequencer.process(addLinkOperation);
-  operationSequencer.process(initializehasManyOperation);
-  operationSequencer.process(addTaskBoardOperation);
-  operationSequencer.process(addProjectBoardOperation);
-
-  deepEqual(cache.retrieve(['project-board', 'project-board1', '__rel', 'taskBoards']), {'task-board1': true});
-});
-

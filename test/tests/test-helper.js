@@ -43,7 +43,7 @@ function captureDidTransforms(source, count, options){
 
       console.group("Received operations");
       for(var i = 0; i < operations.length; i++){
-        console.log("operation " + (i + 1) + ": ", fop(operations[i]));
+        console.log("operation " + (i + 1) + ": ", operations[i].serialize());
       }
       console.groupEnd();
 

@@ -74,8 +74,8 @@ test("serialize - serializes null dates", function(){
 });
 
 test("serialize - throw exception if any links are unitialized", function(){
-  var jupiter = schema.normalize('planet', { id: 'p1', name: "Jupiter", __rel: { moons: OC.LINK_NOT_INITIALIZED } });
-
+  var jupiter = schema.normalize('planet', { id: 'p1', name: "Jupiter", __rel: { moons: OC.LINK_NOT_INITIALIZED } }, {initializeLinks: false});
+  console.log(jupiter);
   try {
     firebaseSerializer.serialize('planet', jupiter);
     ok(false, 'should have thrown exception');

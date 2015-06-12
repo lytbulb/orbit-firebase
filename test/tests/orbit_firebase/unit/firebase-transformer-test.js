@@ -197,25 +197,6 @@ test("add link - set hasOne", function(){
   });
 });
 
-test("add link - set hasOne to LINK_NOT_INITIALIZED", function(){
-  stop();
-
-  var planetId = 10;
-
-  firebaseTransformer.transform(op('add', 'moon/1', {name: "Titan", __rel: { planet: planetId }}))
-  .then(function(){
-    return firebaseTransformer.transform(op('add', 'moon/1/__rel/planet', OC.LINK_NOT_INITIALIZED));
-
-  })
-  .then(function(){
-    firebaseClient.valueAt('moon/1/planet').then(function(firebasePlanetId){
-      start();
-      equal(firebasePlanetId, planetId);
-    });
-
-  });
-});
-
 test("replace link - replace hasOne", function(){
   stop();
 
@@ -352,25 +333,6 @@ test("replace link - set hasMany", function(){
   firebaseTransformer.transform(op('add', 'moon/1', {name: "Titan"}))
   .then(function(){
     return firebaseTransformer.transform(op('replace', 'planet/1/__rel/moons', moonIds));
-
-  })
-  .then(function(){
-    firebaseClient.valueAt('planet/1/moons').then(function(firebaseMoonIds){
-      start();
-      deepEqual(firebaseMoonIds, moonIds);
-    });
-
-  });
-});
-
-test("replace link - set hasMany to LINK_NOT_INITIALIZED", function(){
-  stop();
-
-  var moonIds = arrayToHash(['abc1','abc2','abc3'], true);
-
-  firebaseTransformer.transform(op('add', 'planet/1', {name: "Jupiter", __rel: { moons: moonIds }}))
-  .then(function(){
-    return firebaseTransformer.transform(op('replace', 'planet/1/__rel/moons', OC.LINK_NOT_INITIALIZED));
 
   })
   .then(function(){
