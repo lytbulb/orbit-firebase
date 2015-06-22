@@ -2,6 +2,7 @@
 import FirebaseClient from 'orbit-firebase/firebase-client';
 import Orbit from 'orbit/main';
 import { prepareFirebaseClient } from 'tests/test-helper';
+import { Promise } from 'rsvp';
 
 var firebaseRef,
     firebaseClient;

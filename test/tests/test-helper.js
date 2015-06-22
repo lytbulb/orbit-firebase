@@ -1,7 +1,7 @@
 /* global clearTimeout, Firebase */
 import Operation from 'orbit/operation';
 import { fop, operationToString } from 'orbit-firebase/lib/operation-utils';
-import { on } from 'rsvp';
+import { on, Promise } from 'rsvp';
 import Orbit from 'orbit/main';
 import FirebaseClient from 'orbit-firebase/firebase-client';
 import { arrayToHash } from 'orbit-firebase/lib/array-utils';
