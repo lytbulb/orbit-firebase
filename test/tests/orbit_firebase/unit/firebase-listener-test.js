@@ -105,7 +105,7 @@ test("receive remove record operation", function(){
 
   var planet = schema.normalize('planet', {id: "abc123", name: "Pluto"});
 
-  var receiveOperations = captureDidTransforms(firebaseListener, 5, {logOperations: true});
+  var receiveOperations = captureDidTransforms(firebaseListener, 2, {logOperations: true});
 
   firebaseClient.set('planet/abc123', planet).then(function(){
     firebaseClient.remove('planet/abc123');
@@ -119,18 +119,23 @@ test("receive remove record operation", function(){
 
 test("receive update attribute operation", function(){
   stop();
-  firebaseListener.subscribeToType('planet');
-
   var planet = schema.normalize('planet', {id: "abc123", name: "Pluto"});
-
-  var receiveOperations = captureDidTransforms(firebaseListener, 3);
   firebaseClient.set('planet/abc123', planet);
-  firebaseClient.set('planet/abc123/name', "Jupiter");
 
-  receiveOperations.then(function(receivedOperations){
-    start();
-    shouldIncludeOperation(op('replace', 'planet/abc123/name', 'Jupiter'), receivedOperations);
+  firebaseListener.subscribeToRecord('planet', 'abc123');
+
+  firebaseListener.then(function(){
+
+    var receiveOperations = captureDidTransforms(firebaseListener, 2);
+    firebaseClient.set('planet/abc123/name', "Jupiter");
+
+    receiveOperations.then(function(receivedOperations){
+      start();
+      shouldIncludeOperation(op('replace', 'planet/abc123/name', 'Jupiter'), receivedOperations);
+    });
+
   });
+
 });
 
 test("receive replace hasOne operation", function(){
@@ -147,7 +152,7 @@ test("receive replace hasOne operation", function(){
 
   }).then(function(){
 
-    var receiveOperations = captureDidTransforms(firebaseListener, 5);
+    var receiveOperations = captureDidTransforms(firebaseListener, 3);
 
     firebaseClient.set('moon/moon123/planet', planet.id);
 
@@ -164,7 +169,7 @@ test("receive remove hasOne operation", function(){
   var moon = schema.normalize('moon', {id: "moon123", name: "titan"});
   var planet = schema.normalize('planet', {id: "planet456", name: "jupiter"});
 
-  var receiveOperations = captureDidTransforms(firebaseListener, 3);
+  var receiveOperations = captureDidTransforms(firebaseListener, 2);
 
   firebaseClient.set('moon/moon123', moon);
   firebaseClient.set('planet/planet456', planet);
@@ -184,7 +189,7 @@ test("receive add to hasMany operation", function(){
   var moon = schema.normalize('moon', {id: "moon123", name: "titan"});
   var planet = schema.normalize('planet', {id: "planet456", name: "jupiter"});
 
-  var receiveOperations = captureDidTransforms(firebaseListener, 8);
+  var receiveOperations = captureDidTransforms(firebaseListener, 5);
 
   firebaseClient.set('moon/moon123', moon);
   firebaseClient.set('planet/planet456', planet);
@@ -203,7 +208,7 @@ test("receive remove from hasMany operation", function(){
   var moon = schema.normalize('moon', {id: "moon123", name: "titan"});
   var planet = schema.normalize('planet', {id: "planet456", name: "jupiter"});
 
-  var receiveOperations = captureDidTransforms(firebaseListener, 9);
+  var receiveOperations = captureDidTransforms(firebaseListener, 7);
 
   all([
     firebaseClient.set('moon/moon123', moon),
@@ -283,7 +288,7 @@ test("subscribe to hasOne link", function(){
     firebaseClient.set('planet/planet456', planet)
   ])
   .then(function(){
-    var receiveOperations = captureDidTransforms(firebaseListener, 4);
+    var receiveOperations = captureDidTransforms(firebaseListener, 2);
 
     firebaseListener.subscribeToLink('moon', 'moon123', 'planet');
 
@@ -303,7 +308,7 @@ test("receive update to hasOne link", function(){
   var titan = schema.normalize('moon', {id: "titan", name: "titan", planet: 'jupiter'});
   var jupiter = schema.normalize('planet', {id: "jupiter", name: "Jupiter", moons: {'titan': true}});
   var saturn = schema.normalize('planet', {id: "saturn", name: "Saturn", moons: {}});
-  var receiveOperations = captureDidTransforms(firebaseListener, 8);
+  var receiveOperations = captureDidTransforms(firebaseListener, 4);
 
   all([
     firebaseClient.set('moon/titan', titan),

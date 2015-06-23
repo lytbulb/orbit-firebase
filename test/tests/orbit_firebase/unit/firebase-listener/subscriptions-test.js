@@ -100,8 +100,6 @@ test('subscribe to record', function(){
     firebaseListener.subscribeToRecord('planet', 'planet1').then(function(){
       start();
       includesAll(firebaseListener.subscriptions(), [
-        'planet/planet1/name',
-        'planet/planet1/classification',
         'planet/planet1'
       ]);
     });
@@ -126,12 +124,8 @@ test('subscribe to record including a hasOne', function(){
 
       includesAll(firebaseListener.subscriptions(), [
         'moon/moon1',
-        'moon/moon1/name',
         'planet/planet1',
-        'planet/planet1/name',
-        'planet/planet1/classification',
-        'moon/moon1/planet',
-        'moon/moon1/restricted'
+        'moon/moon1/planet'
       ]);
 
     });
@@ -157,14 +151,9 @@ test('subscribe to record including a hasMany', function(){
     start();
 
     includesAll(firebaseListener.subscriptions(), [
-      'planet/planet1/classification',
       'planet/planet1/moons',
-      'planet/planet1/moons',
-      'planet/planet1/name',
       'planet/planet1',
       'moon/moon1',
-      'moon/moon1/name',
-      'moon/moon1/restricted',
       'moon/moon1/planet'
     ]);
 
@@ -203,7 +192,7 @@ test("subscribe to a record when it's added to a hasMany", function(){
   var jupiter = { id: 'planet1', name: 'Jupiter' };
   var europa = { id: 'moon1', name: 'Europa' };
 
-  var capture = captureDidTransforms(firebaseListener, 6);
+  var capture = captureDidTransforms(firebaseListener, 5);
 
   all([
     firebaseClient.set('planet/planet1', jupiter),
@@ -223,13 +212,8 @@ test("subscribe to a record when it's added to a hasMany", function(){
   capture.then(function(){
     start();
     includesAll(firebaseListener.subscriptions(), [
-      'moon/moon1/name',
       'moon/moon1',
-      'moon/moon1/restricted',
-      'planet/planet1/classification',
       'planet/planet1/moons',
-      'planet/planet1/moons',
-      'planet/planet1/name',
       'planet/planet1'
     ]);
   });
@@ -257,12 +241,8 @@ test("subscribe to a record when it's hasOne is replaced", function(){
   .then(function(){
     start();
     includesAll(firebaseListener.subscriptions(), [
-      "moon/moon1/name",
       "moon/moon1/planet",
       "moon/moon1",
-      'moon/moon1/restricted',
-      "planet/planet1/classification",
-      "planet/planet1/name",
       "planet/planet1"
     ]);
   });
@@ -290,15 +270,10 @@ test("subscribe to initial nested hasOne records", function(){
     start();
 
     includesAll(firebaseListener.subscriptions(), [
-      "moon/moon1/name",
       "moon/moon1/planet",
       "moon/moon1",
-      "moon/moon1/restricted",
-      "planet/planet1/classification",
-      "planet/planet1/name",
       "planet/planet1/star",
       "planet/planet1",
-      "star/star1/name",
       "star/star1"
     ]);
 
@@ -326,17 +301,11 @@ test("subscribe to initial nested hasMany records", function(){
   .then(function(){
     start();
     includesAll(firebaseListener.subscriptions(), [
-      "moon/moon1/name",
       "moon/moon1",
-      "moon/moon1/restricted",
       "moon/moon1/planet",
-      "planet/planet1/classification",
       "planet/planet1/moons",
       "planet/planet1/star",
-      "planet/planet1/name",
       "planet/planet1",
-      "star/star1/name",
-      "star/star1/planets",
       "star/star1/planets",
       "star/star1"
     ]);
@@ -366,17 +335,12 @@ test("subscribe to initial nested hasMany records with restrictions", function()
   .then(function(){
     start();
     includesAll(firebaseListener.subscriptions(), [
-      "moon/moon1/name",
       "moon/moon1",
-      "moon/moon1/restricted",
       "moon/moon1/planet",
       "moon/moon2",
-      "planet/planet1/classification",
       "planet/planet1/moons",
-      "planet/planet1/name",
       "planet/planet1/star",
       "planet/planet1",
-      "star/star1/name",
       "star/star1/planets",
       "star/star1/planets",
       "star/star1"
@@ -410,18 +374,11 @@ test("subscribe to added nested hasMany records", function(){
   .then(function(){
     start();
     includesAll(firebaseListener.subscriptions(), [
-      "moon/moon1/name",
       "moon/moon1",
-      "moon/moon1/restricted",
       "moon/moon1/planet",
-      "planet/planet1/classification",
       "planet/planet1/moons",
-      "planet/planet1/moons",
-      "planet/planet1/name",
       "planet/planet1/star",
       "planet/planet1",
-      "star/star1/name",
-      "star/star1/planets",
       "star/star1/planets",
       "star/star1"
     ]);
@@ -453,15 +410,10 @@ test("subscribe to added nested hasOne records", function(){
   }).then(function(){
     start();
     includesAll(firebaseListener.subscriptions(), [
-      "moon/moon1/name",
       "moon/moon1/planet",
       "moon/moon1",
-      "moon/moon1/restricted",
-      "planet/planet1/classification",
-      "planet/planet1/name",
       "planet/planet1/star",
       "planet/planet1",
-      "star/star1/name",
       "star/star1"
     ]);
 
@@ -497,13 +449,9 @@ test("subscribe to link", function(){
 
     includesAll(firebaseListener.subscriptions(), [
       "moon/moon1",
-      "moon/moon1/name",
       "moon/moon1/planet",
-      "moon/moon1/restricted",
       "planet/planet1",
-      "planet/planet1/classification",
-      "planet/planet1/moons",
-      "planet/planet1/name"
+      "planet/planet1/moons"
     ]);
   });
 
