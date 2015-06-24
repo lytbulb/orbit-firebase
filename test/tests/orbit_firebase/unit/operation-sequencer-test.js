@@ -63,9 +63,8 @@ test("emits dependent add to hasMany link operation after add records", function
 
   operationSequencer.process(addLinkOperation);
   operationSequencer.process(addProjectBoardOperation);
-  operationSequencer.process(addTaskBoardOperation);
   shouldNotIncludeOperation(addLinkOperation, receivedOperations);
-  operationSequencer.process(initializeTaskBoardsOperation);
+  operationSequencer.process(addTaskBoardOperation);
 
   shouldIncludeOperation(addLinkOperation, receivedOperations);
 });
