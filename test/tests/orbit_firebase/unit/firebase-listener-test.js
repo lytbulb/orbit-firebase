@@ -153,7 +153,7 @@ test("receive replace hasOne operation", function(){
 
   }).then(function(){
 
-    var receiveOperations = captureDidTransforms(firebaseListener, 3);
+    var receiveOperations = captureDidTransforms(firebaseListener, 2);
     firebaseClient.set('moon/moon123/planet', planet.id);
 
     receiveOperations.then(function(receivedOperations){
