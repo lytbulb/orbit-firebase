@@ -126,7 +126,7 @@ test("receive update attribute operation", function(){
 
   firebaseListener.then(function(){
 
-    var receiveOperations = captureDidTransforms(firebaseListener, 2);
+    var receiveOperations = captureDidTransforms(firebaseListener, 1);
     firebaseClient.set('planet/abc123/name', "Jupiter");
 
     receiveOperations.then(function(receivedOperations){
@@ -148,12 +148,12 @@ test("receive replace hasOne operation", function(){
     firebaseClient.set('planet/planet456', planet)
 
   ]).then(function(){
-    return firebaseListener.subscribeToRecord('moon', 'moon123', {include: ['planet']});
+    firebaseListener.subscribeToRecord('moon', 'moon123', {include: ['planet']});
+    return firebaseListener;
 
   }).then(function(){
 
     var receiveOperations = captureDidTransforms(firebaseListener, 3);
-
     firebaseClient.set('moon/moon123/planet', planet.id);
 
     receiveOperations.then(function(receivedOperations){
@@ -189,7 +189,7 @@ test("receive add to hasMany operation", function(){
   var moon = schema.normalize('moon', {id: "moon123", name: "titan"});
   var planet = schema.normalize('planet', {id: "planet456", name: "jupiter"});
 
-  var receiveOperations = captureDidTransforms(firebaseListener, 5);
+  var receiveOperations = captureDidTransforms(firebaseListener, 4);
 
   firebaseClient.set('moon/moon123', moon);
   firebaseClient.set('planet/planet456', planet);
@@ -208,7 +208,7 @@ test("receive remove from hasMany operation", function(){
   var moon = schema.normalize('moon', {id: "moon123", name: "titan"});
   var planet = schema.normalize('planet', {id: "planet456", name: "jupiter"});
 
-  var receiveOperations = captureDidTransforms(firebaseListener, 7);
+  var receiveOperations = captureDidTransforms(firebaseListener, 5);
 
   all([
     firebaseClient.set('moon/moon123', moon),
@@ -237,15 +237,14 @@ test("subscribe to hasMany link", function(){
     firebaseClient.set('planet/planet456', planet)
   ])
   .then(function(){
-    var receivedOperations = operationsSink(firebaseListener);
+    var receiveOperations = captureDidTransforms(firebaseListener, 3);
 
     firebaseListener.subscribeToLink('planet', 'planet456', 'moons');
 
-    firebaseListener.then(function(){
+    receiveOperations.then(function(receivedOperations){
       start();
 
       shouldIncludeOperation(op('add', 'planet/planet456/__rel/moons', {'moon123': true}), receivedOperations);
-      shouldIncludeOperation(op('add', 'moon/moon123/__rel/planet', 'planet456'), receivedOperations);
       shouldIncludeOperation(op('add', 'planet/planet456/__rel/moons/moon123', true), receivedOperations);
     });
 

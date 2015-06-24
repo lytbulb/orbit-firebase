@@ -151,10 +151,9 @@ test('subscribe to record including a hasMany', function(){
     start();
 
     includesAll(firebaseListener.subscriptions(), [
-      'planet/planet1/moons',
-      'planet/planet1',
       'moon/moon1',
-      'moon/moon1/planet'
+      'planet/planet1',
+      'planet/planet1/moons'
     ]);
 
   });
@@ -175,7 +174,6 @@ test('subscribe to record including a hasMany with some restricted members', fun
   ])
   .then(function(){
     firebaseListener.subscribeToRecord('planet', 'planet1', buildOptions({include: ['moons']}));
-    window.firebaseListener = firebaseListener;
     return firebaseListener;
 
   })
@@ -192,7 +190,7 @@ test("subscribe to a record when it's added to a hasMany", function(){
   var jupiter = { id: 'planet1', name: 'Jupiter' };
   var europa = { id: 'moon1', name: 'Europa' };
 
-  var capture = captureDidTransforms(firebaseListener, 5);
+  var capture = captureDidTransforms(firebaseListener, 4);
 
   all([
     firebaseClient.set('planet/planet1', jupiter),
@@ -302,12 +300,10 @@ test("subscribe to initial nested hasMany records", function(){
     start();
     includesAll(firebaseListener.subscriptions(), [
       "moon/moon1",
-      "moon/moon1/planet",
-      "planet/planet1/moons",
-      "planet/planet1/star",
       "planet/planet1",
-      "star/star1/planets",
-      "star/star1"
+      "planet/planet1/moons",
+      "star/star1",
+      "star/star1/planets"
     ]);
 
   });
@@ -336,14 +332,11 @@ test("subscribe to initial nested hasMany records with restrictions", function()
     start();
     includesAll(firebaseListener.subscriptions(), [
       "moon/moon1",
-      "moon/moon1/planet",
       "moon/moon2",
-      "planet/planet1/moons",
-      "planet/planet1/star",
       "planet/planet1",
-      "star/star1/planets",
-      "star/star1/planets",
-      "star/star1"
+      "planet/planet1/moons",
+      "star/star1",
+      "star/star1/planets"
     ]);
 
     equal(firebaseListener.findSubscription('moon/moon2').status, 'permission_denied', 'access denied to record moon/moon2');
@@ -375,12 +368,10 @@ test("subscribe to added nested hasMany records", function(){
     start();
     includesAll(firebaseListener.subscriptions(), [
       "moon/moon1",
-      "moon/moon1/planet",
-      "planet/planet1/moons",
-      "planet/planet1/star",
       "planet/planet1",
-      "star/star1/planets",
-      "star/star1"
+      "planet/planet1/moons",
+      "star/star1",
+      "star/star1/planets"
     ]);
 
   });
@@ -449,8 +440,6 @@ test("subscribe to link", function(){
 
     includesAll(firebaseListener.subscriptions(), [
       "moon/moon1",
-      "moon/moon1/planet",
-      "planet/planet1",
       "planet/planet1/moons"
     ]);
   });
