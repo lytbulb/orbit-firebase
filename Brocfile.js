@@ -22,6 +22,7 @@ var packages = [
               /orbit-firebase\/mixins\/invocations-tracker.js/,
               /orbit-firebase\/cache-source.js/,
               /orbit-firebase\/operation-sequencer.js/,
+              /orbit-firebase\/related-inverse-links.js/,
               /orbit-firebase\/firebase-client.js/,
               /orbit-firebase\/firebase-connector.js/,
               /orbit-firebase\/firebase-serializer.js/,
