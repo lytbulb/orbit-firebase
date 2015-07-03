@@ -59,7 +59,8 @@ var schemaDefinition = {
 
 var firebaseClient,
     firebaseTransformer,
-    cache;
+    cache,
+    schema;
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -69,7 +70,7 @@ module("OC - FirebaseTransformer", {
     Orbit.all = all;
     Orbit.resolve = resolve;
 
-    var schema = new Schema(schemaDefinition);
+    schema = new Schema(schemaDefinition);
     var serializer = new FirebaseSerializer(schema);
     cache = new Cache(schema);
 
@@ -89,14 +90,91 @@ test("can add record", function(){
   expect(2);
   stop();
 
-  firebaseTransformer.transform(op('add', 'planet/1', {name: "Jupiter"}))
-  .then(function(){
-    firebaseClient.valueAt('planet/1').then(function(planet){
-      start();
+  var addJupiterOp = op('add', 'planet/1', schema.normalize('planet', {name: "Jupiter"}));
 
-      ok(planet.id, "planet has an id");
-      equal(planet.name, "Jupiter", "planet has a name");
+  firebaseTransformer.transform(addJupiterOp)
+    .then(function(){
+      firebaseClient.valueAt('planet/1').then(function(planet){
+        start();
+
+        ok(planet.id, "planet has an id");
+        equal(planet.name, "Jupiter", "planet has a name");
+      });
     });
+});
+
+test("can add record with relationships", function(){
+  expect(3);
+  stop();
+
+  var titan = schema.normalize('moon', { id: 'titan', name: 'Titan' });
+  var rhea = schema.normalize('moon', { id: 'rhea', name: 'Rhea' });
+
+  var moonIds = {"titan": true, "rhea": true};
+  var saturn = schema.normalize('planet', { id: 'saturn', name: 'Saturn', __rel: { moons: moonIds }});
+
+  var addSaturnOp = op('add', 'planet/saturn', saturn);
+
+  cache.reset({
+    moon: { titan: titan, rhea: rhea },
+    planet: {}
+  });
+
+  all([
+    firebaseClient.set('/moon/titan', { id: 'titan', name: 'Titan', planet: null }),
+    firebaseClient.set('/moon/rhea', { id: 'rhea', name: 'Rhea', planet: null }),
+
+  ]).then(function(){
+    return firebaseTransformer.transform(addSaturnOp);
+
+  }).then(function(){
+    return hash({
+      moonIds: firebaseClient.valueAt('/planet/saturn/moons'),
+      rheaPlanetId: firebaseClient.valueAt('/moon/rhea/planet'),
+      titanPlanetId: firebaseClient.valueAt('/moon/titan/planet')
+    });
+
+  }).then(function(firebaseRelationships){
+    start();
+    deepEqual(firebaseRelationships.moonIds, {rhea: true, titan: true});
+    equal(firebaseRelationships.rheaPlanetId, 'saturn');
+    equal(firebaseRelationships.titanPlanetId, 'saturn');
+  });
+});
+
+test("can remove record with relationships", function(){
+  expect(2);
+  stop();
+
+  var moonIds = {"titan": true, "rhea": true};
+  var saturn = schema.normalize('planet', { id: 'saturn', name: 'Saturn', __rel: { moons: moonIds }});
+  var titan = schema.normalize('moon', { id: 'titan', name: 'Titan', __rel: { planet: 'saturn' } });
+  var rhea = schema.normalize('moon', { id: 'rhea', name: 'Rhea', __rel: { planet: 'saturn' } });
+
+  cache.reset({
+    moon: { titan: titan, rhea: rhea },
+    planet: { saturn: saturn }
+  });
+
+  all([
+    firebaseClient.set('/moon/titan', { id: 'titan', name: 'Titan', planet: 'saturn' }),
+    firebaseClient.set('/moon/rhea', { id: 'rhea', name: 'Rhea', planet: 'saturn' }),
+    firebaseClient.set('/planet/saturn', { id: 'saturn', name: 'Saturn', moons: { titan: true, rhea: true } })
+
+  ]).then(function(){
+    return firebaseTransformer.transform(op('remove', 'planet/saturn'));
+
+  }).then(function(){
+    return hash({
+      titanPlanetId: firebaseClient.valueAt('/moon/titan/planet'),
+      rheaPlanetId: firebaseClient.valueAt('/moon/rhea/planet')
+    });
+
+  }).then(function(firebaseRelationships){
+    start();
+    equal(firebaseRelationships.titanPlanetId, null);
+    equal(firebaseRelationships.rheaPlanetId, null);
+
   });
 });
 
@@ -104,13 +182,19 @@ test("can remove record", function(){
   expect(1);
   stop();
 
-  firebaseTransformer.transform(op('add', 'planet/1', {name: "Jupiter"}))
-  .then(function(){
-    return firebaseTransformer.transform(op('remove', 'planet/1'));
+  var jupiter = schema.normalize('planet', {name: "Jupiter"});
 
-  })
-  .then(function(){
-    firebaseClient.valueAt('planet/1').then(function(planet){
+  cache.reset({
+    planet: {
+      jupiter: jupiter
+    }
+  });
+
+  firebaseClient.set('/planet/jupiter', {id: 'jupiter', name: 'Jupiter'}).then(function(){
+    return firebaseTransformer.transform(op('remove', '/planet/jupiter'));
+    
+  }).then(function(){
+    firebaseClient.valueAt('planet/jupiter').then(function(planet){
       start();
       ok(!planet, "planet has been removed");
     });
@@ -122,18 +206,20 @@ test("can replace attribute", function(){
   expect(1);
   stop();
 
-  firebaseTransformer.transform(op('add', 'planet/1', {name: "Jupiter"}))
-  .then(function(){
-    return firebaseTransformer.transform(op('replace', 'planet/1/name', 'Saturn'));
+  var replaceAttributeOp = op('add', 'planet/1', schema.normalize('planet', {name: "Jupiter"}));
 
-  })
-  .then(function(){
-    firebaseClient.valueAt('planet/1').then(function(planet){
-      start();
-      equal(planet.name, "Saturn");
+  firebaseTransformer.transform(replaceAttributeOp)
+    .then(function(){
+      return firebaseTransformer.transform(op('replace', 'planet/1/name', 'Saturn'));
+
+    })
+    .then(function(){
+      firebaseClient.valueAt('planet/1').then(function(planet){
+        start();
+        equal(planet.name, "Saturn");
+      });
+
     });
-
-  });
 });
 
 test("can replace date attribute", function(){
@@ -142,9 +228,11 @@ test("can replace date attribute", function(){
   var originalDate = new Date(1428555600000);
   var modifiedDate = new Date(1428555800000);
 
-  firebaseTransformer.transform(op('add', 'planet/1', {birthDate: originalDate}))
-  .then(function(){
-    return firebaseTransformer.transform(op('replace', 'planet/1/birthDate', modifiedDate));
+  var addPlanetOp = op('add', 'planet/1', schema.normalize('planet', {birthDate: originalDate}));
+  var replaceAttributeOp = op('replace', 'planet/1/birthDate', modifiedDate);
+
+  firebaseTransformer.transform(addPlanetOp).then(function(){
+    return firebaseTransformer.transform(replaceAttributeOp);
 
   })
   .then(function(){
@@ -160,8 +248,9 @@ test("can add attribute", function(){
   expect(1);
   stop();
 
-  firebaseTransformer.transform(op('add', 'planet/1', {name: "Jupiter"}))
-  .then(function(){
+  var addAttributeOp = op('add', 'planet/1', schema.normalize('planet', {name: "Jupiter"}));
+
+  firebaseTransformer.transform(addAttributeOp).then(function(){
     return firebaseTransformer.transform(op('add', 'planet/1/name', 'Saturn'));
 
   })
@@ -179,60 +268,99 @@ test("can add attribute", function(){
   /////////////////////////////////////////////////////////////////////////////
 
 test("add link - set hasOne", function(){
+  expect(2);
   stop();
 
-  var planetId = 10;
+  var addMoonsPlanetOp = op('add', 'moon/titan/__rel/planet', 'saturn');
 
-  firebaseTransformer.transform(op('add', 'moon/1', {name: "Titan"}))
-  .then(function(){
-    return firebaseTransformer.transform(op('add', 'moon/1/__rel/planet', planetId));
+  var titan = schema.normalize('moon', { id: 'titan', name: 'Titan' });
+  var saturn = schema.normalize('planet', { id: 'saturn', name: 'Saturn' });
 
-  })
-  .then(function(){
-    firebaseClient.valueAt('moon/1/planet').then(function(firebasePlanetId){
+  cache.reset({
+    moon: { titan: titan },
+    planet: { saturn: saturn }
+  });
+
+  firebaseTransformer.transform(addMoonsPlanetOp).then(function(){
+    hash({
+      planetId: firebaseClient.valueAt('moon/titan/planet'),
+      moonIds: firebaseClient.valueAt('planet/saturn/moons')
+    })
+    .then(function(firebaseRelationships){
       start();
-      equal(firebasePlanetId, planetId);
+
+      equal(firebaseRelationships.planetId, 'saturn');
+      ok(firebaseRelationships.moonIds.titan);
     });
 
   });
 });
 
 test("replace link - replace hasOne", function(){
+  expect(2);
   stop();
 
-  var planetId = 10;
+  var replaceMoonsPlanetOp = op('replace', 'moon/titan/__rel/planet', 'saturn');
 
-  firebaseTransformer.transform(op('add', 'moon/1', {name: "Titan"}))
-  .then(function(){
-    return firebaseTransformer.transform(op('replace', 'moon/1/__rel/planet', planetId));
+  var titan = schema.normalize('moon', { id: 'titan', name: 'Titan' });
+  var saturn = schema.normalize('planet', { id: 'saturn', name: 'Saturn' });
 
-  })
-  .then(function(){
-    firebaseClient.valueAt('moon/1/planet').then(function(firebasePlanetId){
+  cache.reset({
+    moon: { titan: titan },
+    planet: { saturn: saturn }
+  });
+
+  firebaseTransformer.transform(replaceMoonsPlanetOp).then(function(){
+    hash({
+      planetId: firebaseClient.valueAt('moon/titan/planet'),
+      moonIds: firebaseClient.valueAt('planet/saturn/moons')
+    })
+    .then(function(firebaseRelationships){
       start();
-      equal(firebasePlanetId, planetId);
+
+      equal(firebaseRelationships.planetId, 'saturn');
+      ok(firebaseRelationships.moonIds.titan);
     });
 
   });
 });
 
 test("remove link - remove hasOne", function(){
+  expect(2);
   stop();
 
-  var planetId = 10;
+  var removeTitanOp = op('remove', 'moon/titan/__rel/planet');
 
-  firebaseTransformer.transform(op('add', 'moon/1', {name: "Titan"}))
-  .then(function(){
-    return firebaseTransformer.transform(op('remove', 'moon/1/__rel/planet'));
+  cache.reset({
+    moon: {
+      titan: schema.normalize('moon', { id: 'titan', name: 'Titan', __rel: { planet: 'saturn' } }),
+    },
+    planet: {
+      saturn: schema.normalize('planet', { id: 'saturn', name: 'Saturn', moons: { 'titan': true } })
+    }
+  });
 
-  })
-  .then(function(){
-    firebaseClient.valueAt('moon/1/planet').then(function(firebasePlanetId){
-      start();
-      ok(!firebasePlanetId);
+  all([
+    firebaseClient.set('/moon/titan', { id: 'titan', name: 'Titan', planet: 'saturn' }),
+    firebaseClient.set('/planet/saturn', { id: 'saturn', name: 'Saturn', moons: { 'titan': true } })
+
+  ]).then(function(){
+    return firebaseTransformer.transform(removeTitanOp);
+
+  }).then(function(){
+    return hash({
+      planetId: firebaseClient.valueAt('/moon/titan/planet'),
+      moonIds: firebaseClient.valueAt('/planet/saturn/moons')
+
     });
 
+  }).then(function(firebaseRelationships){
+    start();
+    equal(firebaseRelationships.planetId, null);
+    equal(firebaseRelationships.moonIds, null);
+    
   });
+
 });
 
 /////////////////////////////////////////////////////////////////////////////
@@ -306,62 +434,104 @@ test("remove link - remove hasOne", function(){
   /////////////////////////////////////////////////////////////////////////////
 
 test("add link - add to hasMany", function(){
-  expect(1);
+  expect(2);
   stop();
 
   var moonId = 3;
+  var jupiter = schema.normalize('planet', { id: 'jupiter', name: 'Jupiter' });
+  var europa = schema.normalize('moon', { id: 'europa', name: 'Europa' });
 
-  firebaseTransformer.transform(op('add', 'planet/1', {name: "Jupiter"}))
-  .then(function(){
-    return firebaseTransformer.transform(op('add', 'planet/1/__rel/moons/3', true));
+  cache.reset({
+    planet: { jupiter: jupiter },
+    moon: { europa: europa }
+  });
+
+  firebaseTransformer.transform(op('add', 'planet/jupiter', jupiter)).then(function(){
+    return firebaseTransformer.transform(op('add', 'planet/jupiter/__rel/moons/europa', true));
 
   })
   .then(function(){
-    firebaseClient.valueAt('planet/1/moons').then(function(moons){
-      start();
-      ok(moons[3]);
+    return hash({
+      moonIds: firebaseClient.valueAt('planet/jupiter/moons'),
+      planetId: firebaseClient.valueAt('moon/europa/planet')
     });
+
+  })
+  .then(function(firebaseRelationships){
+    start();
+    equal(firebaseRelationships.moonIds.europa, true);
+    equal(firebaseRelationships.planetId, 'jupiter');
 
   });
 });
 
 test("replace link - set hasMany", function(){
+  expect(3);
   stop();
 
-  var moonIds = arrayToHash(['abc1','abc2','abc3'], true);
+  var moonIds = {titan: true, rhea: true};
+  var titan = schema.normalize('moon', { id: 'titan', name: 'Titan' });
+  var rhea = schema.normalize('moon', { id: 'rhea', name: 'Rhea' });
+  var saturn = schema.normalize('planet', { id: 'saturn', name: 'Saturn' });
 
-  firebaseTransformer.transform(op('add', 'moon/1', {name: "Titan"}))
-  .then(function(){
-    return firebaseTransformer.transform(op('replace', 'planet/1/__rel/moons', moonIds));
+  cache.reset({
+    moon: { titan: titan, rhea: rhea },
+    planet: { saturn: saturn }
+  });
+
+  firebaseTransformer.transform(op('add', 'moon/titan', titan)).then(function(){
+    return firebaseTransformer.transform(op('replace', 'planet/saturn/__rel/moons', moonIds));
 
   })
   .then(function(){
-    firebaseClient.valueAt('planet/1/moons').then(function(firebaseMoonIds){
-      start();
-      deepEqual(firebaseMoonIds, moonIds);
+    return hash({
+      moonIds: firebaseClient.valueAt('planet/saturn/moons'),
+      titanPlanetId: firebaseClient.valueAt('moon/titan/planet'),
+      rheaPlanetId: firebaseClient.valueAt('moon/rhea/planet')
     });
-
+  })
+  .then(function(firebaseRelationships){
+    start();
+    deepEqual(firebaseRelationships.moonIds, {titan: true, rhea: true});
+    equal(firebaseRelationships.titanPlanetId, 'saturn');
+    equal(firebaseRelationships.rheaPlanetId, 'saturn');
+    
   });
+
 });
 
 test("remove link - remove from a hasMany", function(){
+  expect(2);
   stop();
 
-  var moonIds = {"abc1": true, "abc2": true, "abc3": true};
+  var moonIds = {"titan": true, "rhea": true};
+  var saturn = schema.normalize('planet', { id: 'saturn', name: 'Saturn', __rel: { moons: moonIds }});
+  var titan = schema.normalize('moon', { id: 'titan', name: 'Titan', __rel: { planet: 'saturn' } });
+  var rhea = schema.normalize('moon', { id: 'rhea', name: 'Rhea', __rel: { planet: 'saturn' } });
 
-  firebaseTransformer.transform(op('add', 'moon/1', {name: "Titan"}))
-  .then(function(){
-    return firebaseTransformer.transform(op('replace', 'planet/1/__rel/moons', moonIds));
+  cache.reset({
+    moon: { titan: titan, rhea: rhea },
+    planet: { saturn: saturn }
+  });
 
-  })
-  .then(function(){
-    return firebaseTransformer.transform(op('remove', 'planet/1/__rel/moons/abc1'));
-  })
-  .then(function(){
-    firebaseClient.valueAt('planet/1/moons').then(function(firebaseMoons){
-      start();
-      deepEqual(firebaseMoons, {"abc2": true, "abc3": true});
+  all([
+    firebaseClient.set('/moon/titan', { id: 'titan', name: 'Titan', planet: 'saturn' }),
+    firebaseClient.set('/moon/rhea', { id: 'rhea', name: 'Rhea', planet: 'saturn' }),
+    firebaseClient.set('/planet/saturn', { id: 'saturn', name: 'Saturn', moons: { titan: true, rhea: true } })
+
+  ]).then(function(){
+    return firebaseTransformer.transform(op('remove', 'planet/saturn/__rel/moons/titan'));
+
+  }).then(function(){
+    return hash({
+      moonIds: firebaseClient.valueAt('planet/saturn/moons'),
+      planetId: firebaseClient.valueAt('moon/titan/planet'),
     });
+
+  }).then(function(firebaseRelationships){
+    start();
+    deepEqual(firebaseRelationships.moonIds, {rhea: true});
+    equal(firebaseRelationships.planetId, null);
 
   });
 });

@@ -7,7 +7,7 @@ import FirebaseClient from 'orbit-firebase/firebase-client';
 import { Promise, all, allSettled, hash, denodeify,resolve, on, defer, map } from 'rsvp';
 import { isArray, clone } from 'orbit/lib/objects';
 import { spread } from 'orbit/lib/functions';
-import { nextEventPromise, captureDidTransforms, wait, prepareFirebaseClient } from 'tests/test-helper';
+import { op, nextEventPromise, captureDidTransforms, wait, prepareFirebaseClient, shouldIncludeOperation } from 'tests/test-helper';
 import OperationEncoder from 'orbit-common/operation-encoder';
 import { asHash } from 'orbit-firebase/lib/object-utils';
 
@@ -309,7 +309,7 @@ test("#addLink - can add to hasMany", function() {
 });
 
 test('#addLink - can set hasOne link', function(){
-  expect(5);
+  expect(2);
   stop();
 
   var titan, saturn, fbTitan, fbSaturn;
@@ -331,18 +331,6 @@ test('#addLink - can set hasOne link', function(){
     start();
     equal(fbTitan.planet, saturn.id, "titan is in orbit around saturn");
     equal(source.retrieveLink('moon', titan.id, "planet"), saturn.id, "cache should have added saturn to titan");
-    stop();
-
-  }).then(function(){
-    firebaseClient.valueAt('operation').then(function(operations){
-      start();
-      var operationKey = Object.keys(operations)[2];
-      var operation = operations[operationKey];
-      equal(operation.op, 'replace', "op included in operation");
-
-      equal(operation.path, "moon/" + titan.id + "/__rel/planet");
-      equal(operation.value, saturn.id, "operation included value");
-    });
 
   });
 });
@@ -476,7 +464,7 @@ test("#removeLink - can remove from a hasMany relationship", function() {
 // });
 
 test("#removeLink - can remove a hasOne relationship", function() {
-  expect(5);
+  expect(2);
   stop();
 
   var titan, saturn, fbTitan, fbSaturn;
@@ -498,19 +486,9 @@ test("#removeLink - can remove a hasOne relationship", function() {
     ]);
   })
   .then(function(){
+    start();
     ok(!fbTitan.planetId, "titan has left saturn's orbit");
     ok(!source.retrieveLink('moon', titan.id, "planet"), "cache should have removed saturn from titan");
-
-  }).then(function(){
-    firebaseClient.valueAt('operation').then(function(operations){
-      start();
-      var operationKey = Object.keys(operations)[2];
-      var operation = operations[operationKey];
-      equal(operation.op, 'replace', "op included in operation");
-
-      equal(operation.path, "moon/" + fbTitan.id + "/__rel/planet");
-      equal(operation.value, fbSaturn.id, "operation included value");
-    });
 
   });
 });
