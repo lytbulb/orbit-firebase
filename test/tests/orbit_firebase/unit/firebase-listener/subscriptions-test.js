@@ -210,7 +210,7 @@ test("subscribe to a record when it's added to a hasMany", function(){
   capture.then(function(){
     start();
     includesAll(firebaseListener.subscriptions(), [
-      // 'moon/moon1',
+      'moon/moon1',
       'planet/planet1/moons',
       'planet/planet1'
     ]);
