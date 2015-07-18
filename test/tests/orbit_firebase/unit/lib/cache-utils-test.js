@@ -80,6 +80,16 @@ test("detects redundent add link", function(){
   ok(cacheUtils.isRedundent(op('add', 'planet/pluto/__rel/moons/moon1', true)));
 });
 
+test("detects redundent replace link", function(){
+  cache.reset({
+    planet: {
+      'pluto': { id: 'pluto', __rel: { moons: { 'moon1': true } } }
+    }
+  });
+
+  ok(cacheUtils.isRedundent(op('replace', 'planet/pluto/__rel/moons/moon1', true)));
+});
+
 test("detects redundent remove record" , function(){
   ok(cacheUtils.isRedundent(op('remove', 'planet/pluto')));
 });
