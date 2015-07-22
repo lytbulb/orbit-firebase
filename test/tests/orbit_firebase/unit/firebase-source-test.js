@@ -62,7 +62,7 @@ module("OC - FirebaseSource", {
     prepareFirebaseClient().then(function(preparedFirebaseClient){
       firebaseClient = preparedFirebaseClient;
       firebaseRef = firebaseClient.firebaseRef;
-      source = new FirebaseSource(schema, {firebaseRef: firebaseRef});
+      source = new FirebaseSource(schema, {firebaseRef: firebaseRef, blockingTransforms: true});
 
       start();
     });
@@ -542,18 +542,18 @@ test("#findLinked - can filter has-many linked records based on permissions", fu
   var titan, saturn, rhea, fbTitan, fbSaturn;
 
   all([
-    source.add('planet', {name: "Saturn"}).then(function(sourceSaturn){saturn = sourceSaturn;}),
-    source.add('moon', {name: "Titan"}).then(function(sourceTitan){titan = sourceTitan;}),
-    source.add('moon', {name: "Rhea", restricted: true}).then(function(sourceRhea){rhea = sourceRhea;})
+    source.add('planet', {id: 'saturn', name: "Saturn"}),
+    source.add('moon', {id: 'titan', name: "Titan"}),
+    source.add('moon', {id: 'rhea', name: "Rhea", restricted: true})
   ])
   .then(function(){
     return all([
-      source.addLink('planet', saturn.id, 'moons', titan.id),
-      source.addLink('planet', saturn.id, 'moons', rhea.id)
+      source.addLink('planet', 'saturn', 'moons', 'titan'),
+      source.addLink('planet', 'saturn', 'moons', 'rhea')
     ]);
   })
   .then(function(){
-    source.findLinked('planet', saturn.id, 'moons').then(function(moons){
+    source.findLinked('planet', 'saturn', 'moons').then(function(moons){
       start();
       equal(moons.length, 1);
     });

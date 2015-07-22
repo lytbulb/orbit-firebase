@@ -49,7 +49,7 @@ function captureDidTransforms(source, count, options){
 
       start();
       reject("Failed to receive " + count + " operations (received " + operations.length + ")");
-    }, 2500);
+    }, 4000);
 
     function callback(operation){
       operations.push(operation);
