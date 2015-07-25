@@ -32,6 +32,7 @@ var packages = [
               /orbit-firebase\/firebase-source.js/,
               /orbit-firebase\/firebase-listener.js/,
               /orbit-firebase\/transformations.js/,
+              /orbit-firebase\/operation-serializer.js/,
               /orbit-firebase\/subscriptions\/subscription.js/,
               /orbit-firebase\/subscriptions\/record-subscription.js/,
               /orbit-firebase\/subscriptions\/attribute-subscription.js/,
